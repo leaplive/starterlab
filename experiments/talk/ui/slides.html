@@ -59,12 +59,20 @@ html, body { width: 100%; height: 100%; background: var(--bg); }
 
 .remark-slide-content > * { position: relative; z-index: 1; }
 
+@keyframes gradientPan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .remark-slide-content::after {
   content: '';
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 60%, transparent 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 50%, var(--green) 100%);
+  background-size: 200% 200%;
+  animation: gradientPan 4s ease infinite;
   z-index: 10;
 }
 
@@ -72,7 +80,10 @@ h1 {
   font-family: var(--serif);
   font-size: 2.6rem;
   font-weight: 400;
-  color: var(--text);
+  background: linear-gradient(to right, #dfecff, #b69df8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin-bottom: 0.6rem;
@@ -81,7 +92,10 @@ h2 {
   font-family: var(--sans);
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--accent);
+  background: linear-gradient(to right, var(--accent), #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
   letter-spacing: -0.01em;
 }
@@ -113,12 +127,25 @@ code {
   color: var(--green);
 }
 pre {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   border-radius: 8px;
-  padding: 1rem 1.3rem;
+  padding: 2.2rem 1.3rem 1rem;
   margin: 0.8rem 0;
   overflow-x: auto;
+  position: relative;
+}
+pre::before {
+  content: '';
+  position: absolute;
+  top: 14px; left: 16px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #f87171;
+  box-shadow: 16px 0 0 #fbbf24, 32px 0 0 #34d399;
 }
 pre code {
   background: none; border: none; padding: 0;
@@ -148,9 +175,10 @@ pre code {
 .compact-code pre code { font-size: 0.88rem; line-height: 1.5; }
 
 .fill-slide.remark-slide-content {
-  padding: 1.5rem 2rem 1rem;
+  padding: 1rem 2rem 0.5rem;
 }
-.fill-slide iframe { width: 100%; height: 520px; }
+.fill-slide iframe#live-frame { width: 100%; height: 600px; }
+.fill-slide iframe#interact-frame { width: 100%; height: 600px; }
 .fill-slide h2 { margin-bottom: 0.3rem; }
 
 
@@ -165,6 +193,7 @@ pre code {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   color: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .pill.purple { --accent: #a78bfa; }
 .pill.green  { --accent: #34d399; }
@@ -172,8 +201,11 @@ pre code {
 .pill.sm { font-size: 0.68rem; padding: 0.15em 0.55em; }
 
 .box {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   border-left: 3px solid var(--accent);
   border-radius: 6px;
   padding: 0.85rem 1.1rem;
@@ -251,6 +283,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; position
   background: var(--accent);
   margin-right: 0.4rem;
   vertical-align: middle;
+  box-shadow: 0 0 8px var(--accent);
 }
 .dot.green  { background: var(--green); }
 .dot.purple { background: var(--purple); }
@@ -288,7 +321,20 @@ a { color: var(--accent); text-decoration: none; }
   background-image: radial-gradient(circle, #00000008 1px, transparent 1px);
 }
 [data-theme="light"] .remark-slide-content::after {
-  background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 60%, transparent 100%);
+  background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 50%, var(--green) 100%);
+  background-size: 200% 200%;
+}
+[data-theme="light"] h1 {
+  background: linear-gradient(to right, #1e3a8a, #5b21b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] h2 {
+  background: linear-gradient(to right, var(--accent), var(--purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 [data-theme="light"] .title-slide .authors strong { color: #1e293b; }
 [data-theme="light"] .title-slide .authors { color: #475569; }
@@ -296,8 +342,14 @@ a { color: var(--accent); text-decoration: none; }
 [data-theme="light"] .author-table .affil { color: #475569; }
 [data-theme="light"] .hljs-comment { color: #6b7280 !important; }
 [data-theme="light"] .hljs { background: #f1f5f9 !important; color: #1e293b !important; }
-[data-theme="light"] pre { background: #f1f5f9 !important; border-color: #d1d5db; }
-[data-theme="light"] pre code { background: #f1f5f9 !important; color: #1e293b !important; }
+[data-theme="light"] pre { background: rgba(241, 245, 249, 0.6) !important; border-color: rgba(209, 213, 219, 0.6); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+[data-theme="light"] pre code { background: none !important; color: #1e293b !important; }
+[data-theme="light"] .box {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(209, 213, 219, 0.6);
+  border-left-color: var(--accent);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
 [data-theme="light"] code { background: #f1f5f9; border-color: #d1d5db; color: var(--green); }
 [data-theme="light"] .hljs-attr,
 [data-theme="light"] .hljs-variable,
@@ -332,8 +384,6 @@ a { color: var(--accent); text-decoration: none; }
 
 class: title-slide, middle
 
-<div id="qr-slides" style="position:absolute;top:2rem;right:2.5rem;background:#fff;padding:10px;border-radius:8px;z-index:2;"></div>
-
 # LEAP2
 ## *Live Experiments for Active Pedagogy*
 
@@ -354,7 +404,7 @@ class: title-slide, middle
   <td class="affil">University of Southern California</td>
 </tr></table>
 
-<br>
+<div style="text-align:center;margin-top:0.8rem;"><div id="qr-slides" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div><div style="font-family:var(--mono);font-size:0.55rem;color:#60a5fa;margin-top:4px;">Follow along</div></div>
 
 <span class="slide-hints" style="font-size:0.6rem;color:#475569;opacity:0.5;">`f` fullscreen &nbsp; · &nbsp; `t` toggle theme &nbsp; · &nbsp; `l` admin login to sync slides</span>
 
@@ -411,6 +461,28 @@ How do we get there?
 
 ---
 
+## The LEAP
+
+**LEAP** = *Live Experiments for Active Pedagogy*
+
+A **unified framework** for creating and sharing interactive, Nifty-like in-class demonstrations.
+
+- LEAP serves **instructor-defined functions** as remote APIs
+- Students **interact with these functions** from their own programming environment — Python, JS, Julia
+- Interactions are **logged** — student, args, result, timestamp
+- **Live dashboard** shows everyone's work as it happens
+- **Share individual experiments** — others can add them to their own lab with `leap add`
+- **Share entire labs** — a full collection of experiments, cloned and run in one step
+
+.box.green[
+<span class="dot"></span> Two-way — students drive &nbsp;
+<span class="dot green"></span> Parallel interaction &nbsp;
+<span class="dot amber"></span> Mistakes visible &nbsp;
+<span class="dot purple"></span> Shareable across universities
+]
+
+---
+
 ## LEAP in Practice: Gradient Descent
 
 .cols[
@@ -440,7 +512,7 @@ Every lab gets this for free — **parallel exploration**, **live feedback**, **
 Students estimate π by sampling random points in a unit square.
 
 - Call `sample()` to generate a random point
-- Points inside the unit circle → **green**, outside → **red**
+- Points inside the unit circle → <strong style="color:var(--green);">green</strong>, outside → <strong style="color:var(--red);">red</strong>
 - π ≈ 4 × (inside / total)
 
 .box.green[
@@ -454,22 +526,22 @@ Students see their estimate converge in real time — intuitive introduction to 
 
 ---
 
-## The LEAP
+## More Labs Built with LEAP
 
-**LEAP** = *Live Experiments for Active Pedagogy*
+.cols[
+.col[
+<span class="dot green"></span> **Graph Search** — BFS/DFS on grids, trees, custom graphs — students discover neighbors one call at a time
 
-A **unified framework** for creating and sharing interactive, Nifty-like in-class demonstrations.
+<span class="dot purple"></span> **Quiz Lab** — author quizzes in markdown with LaTeX and code blocks — server-side grading keeps answers secure
 
-- LEAP serves **instructor-defined functions** as remote APIs
-- Students can **call these functions** from their own programming environment — Python, JS, Julia
-- Every call is **logged automatically** — student, args, result, timestamp
-- **Live dashboard** shows everyone's work as it happens
+<span class="dot"></span> **Starter Lab** — RPC, logging, decorators, rate limiting — template for building new experiments
 
-.box.green[
-<span class="dot"></span> Two-way — students drive &nbsp;
-<span class="dot green"></span> Parallel interaction &nbsp;
-<span class="dot amber"></span> Mistakes visible &nbsp;
-<span class="dot purple"></span> Shareable across universities
+.muted[+ Euler method, root finding, power method, and more]
+]
+]
+
+.box.amber[
+**This slide deck is itself a LEAP experiment** — with <u>live slide sync</u> and <u>audience interaction</u>.
 ]
 
 ---
@@ -532,98 +604,80 @@ Every call → `student_id` + `args` + `result` + `timestamp` → **DuckDB**.
 
 ---
 
-## What This Unlocks
+class: divider-slide, middle
 
-.cols[
-.col[
-### Labs built with LEAP
-
-<span class="dot green"></span> **Graph Search** — BFS/DFS on grids, trees, custom graphs
-
-<span class="dot"></span> **Gradient Descent 2D** — optimize a non-convex function
-
-<span class="dot amber"></span> **Monte Carlo Pi** — estimate pi by sampling random points
-
-<span class="dot purple"></span> **Quiz Lab** — markdown quizzes with server-side grading
-
-.muted[+ Euler method, root finding, power method, and more]
-]
-]
-
-.box.amber[
-**This slide deck is itself a LEAP experiment** — with <u>live slide sync</u> and <u>audience interaction</u>.
-]
+# Let's Try It — Right Now
 
 ---
 
 class: fill-slide, middle
 
-## Let's Try It — Right Now
-
 .cols[
 .col-40[
-<div id="qr" style="background:#fff;padding:12px;border-radius:8px;display:inline-block;margin-bottom:0.6rem;"></div>
-
-**Scan & tell us what you think**
-
-.muted[Answers appear live →]
+<iframe id="interact-frame" src="interact.html" style="width:100%;border:1px solid var(--border);border-radius:8px;background:var(--bg);"></iframe>
 ]
 .col[
-<iframe id="live-frame" src="live.html" style="width:100%;height:520px;border:1px solid var(--border);border-radius:8px;background:var(--bg);"></iframe>
+<iframe id="live-frame" src="live.html" style="width:100%;border:1px solid var(--border);border-radius:8px;background:var(--bg);"></iframe>
 ]
 ]
 
 ---
 
-## Try It
+## Get Started
 
 ```bash
-pip install git+https://github.com/leaplive/LEAP2.git
-leap set-password
-leap run               # → http://localhost:9000
+pip install leaplive
+leap init                # set up project + admin password
+leap run                 # → http://your-ip:9000
 ```
 
 .cols[
 .col[
-**New lab in 30 seconds:**
+**Create an experiment:**
 ```bash
-leap new my-lab
+leap add my-experiment
 # edit funcs/functions.py
-# open browser — it's live
 ```
 ]
 .col[
-**Share a lab:**
+**Share your experiment:**
 ```bash
-leap install https://github.com/user/lab
-# auto-installs requirements.txt
+leap publish my-experiment
 ```
 ]
 ]
 
-<hr>
-
-.muted[github.com/leaplive/LEAP2 &nbsp;·&nbsp; DOI: 10.1145/3770761.3777313 &nbsp;·&nbsp; sbmohant@usc.edu]
+.cols[
+.col[
+**Discover experiments:**
+```bash
+leap discover --tag algorithms
+```
+]
+.col[
+**Install an experiment:**
+```bash
+leap add github.com/user/experiment
+```
+]
+]
 
 ---
 
 class: divider-slide, middle
 
-# Thanks!
-
-<hr>
+# Thanks! Questions?
 
 **LEAP2** — drop a function, get an interactive lab.
 
+<div style="text-align:center;margin:0.8rem 0;"><div id="qr-repo" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 0.5rem;"></div><div id="qr-arxiv" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 0.5rem;"></div></div>
+
 Happy to facilitate and collaborate for field testing / developing labs with LEAP.
 
-.muted[Any questions?]
-
-<br>
-
-.muted[`github.com/leaplive/LEAP2`]
+<a href="https://github.com/leaplive/LEAP2" style="color:#34d399;">github.com/leaplive/LEAP2</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3770761.3777313">DOI: 10.1145/3770761.3777313</a> &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2601.22534" style="color:#7c3aed;">arXiv: 2601.22534</a> &nbsp;·&nbsp; <a href="mailto:sbmohant@usc.edu">sbmohant@usc.edu</a>
 
 </textarea>
+<div class="stopwatch" id="stopwatch" style="display:none;position:fixed;bottom:1.5rem;left:2rem;font-family:var(--mono);font-size:1.2rem;color:var(--text);z-index:9999;opacity:0.8;background:color-mix(in srgb, var(--surface) 60%, transparent);backdrop-filter:blur(10px);padding:0.2em 0.6em;border-radius:6px;border:1px solid color-mix(in srgb, var(--border) 60%, transparent);">00:00</div>
 
 
 <style>
@@ -679,6 +733,23 @@ var slideshow = remark.create({
   countIncrementalSlides: false,
   navigation: { scroll: false },
 });
+// — Shared helpers —
+function colorQR(svg, color) {
+  svg = svg.replace(/fill="[^"]*"/g, function(m) {
+    return m.indexOf('fff') !== -1 || m.indexOf('FFF') !== -1 || m === 'fill="white"' ? m : 'fill="' + color + '"';
+  });
+  return svg.replace(/fill:\s*#000[^;]*/g, 'fill:' + color).replace(/fill:\s*black/g, 'fill:' + color);
+}
+
+function syncIframePolling() {
+  var visibleSlide = document.querySelector('.remark-visible .remark-slide-content');
+  var visible = visibleSlide && (visibleSlide.querySelector('iframe') !== null);
+  var iframes = document.querySelectorAll('iframe');
+  for (var i = 0; i < iframes.length; i++) {
+    try { iframes[i].contentWindow.postMessage({ polling: !!visible }, '*'); } catch(e) {}
+  }
+}
+
 slideshow.on('afterShowSlide', function() {
   renderMathInElement(document.body, {
     delimiters: [
@@ -687,13 +758,7 @@ slideshow.on('afterShowSlide', function() {
     ],
     throwOnError: false,
   });
-  // Pause/resume iframe polling based on slide visibility
-  var iframe = document.getElementById('live-frame');
-  if (iframe) {
-    var slideEl = document.querySelector('.remark-visible');
-    var visible = slideEl && slideEl.querySelector('#live-frame');
-    try { iframe.contentWindow.postMessage({ polling: !!visible }, '*'); } catch(e) {}
-  }
+  syncIframePolling();
 });
 
 // — Theme toggle: press 't' to switch light/dark —
@@ -730,11 +795,14 @@ slideshow.on('afterShowSlide', function() {
     }
   }
 
-  // Sync iframes on load too
-  setTimeout(function() {
-    var current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-    broadcastTheme(current);
-  }, 1000);
+  // Sync theme to iframes once they load
+  var _themeIframes = document.querySelectorAll('iframe');
+  for (var _ti = 0; _ti < _themeIframes.length; _ti++) {
+    _themeIframes[_ti].addEventListener('load', function() {
+      var current = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      broadcastTheme(current);
+    });
+  }
 
   document.addEventListener('keydown', function(e) {
     if (document.body.classList.contains('leap-modal-open')) return;
@@ -765,6 +833,24 @@ slideshow.on('afterShowSlide', function() {
       localStorage.setItem('slide-theme', next);
       flash(next === 'light' ? '☀ light' : '☾ dark');
       broadcastTheme(next);
+    }
+    if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      var sw = document.getElementById('stopwatch');
+      if (window._stopwatchInterval) {
+        clearInterval(window._stopwatchInterval);
+        window._stopwatchInterval = null;
+        sw.style.display = 'none';
+        sw.textContent = '00:00';
+      } else {
+        window._stopwatchStart = Date.now();
+        sw.style.display = 'block';
+        window._stopwatchInterval = setInterval(function() {
+          var elapsed = Math.floor((Date.now() - window._stopwatchStart) / 1000);
+          var m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+          var sc = String(elapsed % 60).padStart(2, '0');
+          sw.textContent = m + ':' + sc;
+        }, 1000);
+      }
     }
   });
 })();
@@ -797,9 +883,37 @@ try {
   qr2.addData(SLIDES_URL);
   qr2.make();
   var qrSlides = document.getElementById('qr-slides');
-  if (qrSlides) qrSlides.innerHTML = qr2.createSvgTag(4, 0);
+  if (qrSlides) {
+    qrSlides.innerHTML = colorQR(qr2.createSvgTag(4, 0), '#60a5fa');
+  }
 } catch (e) {
   console.warn('Slides QR generation failed:', e);
+}
+
+// Generate QR code for LEAP repo (thanks slide)
+try {
+  var qr3 = qrcode(0, 'M');
+  qr3.addData('https://github.com/leaplive/LEAP2');
+  qr3.make();
+  var qrRepo = document.getElementById('qr-repo');
+  if (qrRepo) {
+    qrRepo.innerHTML = '<div style="font-family:var(--mono);font-size:0.55rem;color:#34d399;margin-bottom:4px;font-weight:500;">GitHub</div>' + colorQR(qr3.createSvgTag(6, 0), '#34d399');
+  }
+} catch (e) {
+  console.warn('Repo QR generation failed:', e);
+}
+
+// Generate QR code for arXiv paper (thanks slide)
+try {
+  var qr4 = qrcode(0, 'M');
+  qr4.addData('https://arxiv.org/abs/2601.22534');
+  qr4.make();
+  var qrArxiv = document.getElementById('qr-arxiv');
+  if (qrArxiv) {
+    qrArxiv.innerHTML = '<div style="font-family:var(--mono);font-size:0.55rem;color:#7c3aed;margin-bottom:4px;font-weight:500;">Paper</div>' + colorQR(qr4.createSvgTag(6, 0), '#7c3aed');
+  }
+} catch (e) {
+  console.warn('arXiv QR generation failed:', e);
 }
 
 // — Slide sync —
@@ -838,7 +952,7 @@ try {
         if (data.result && data.result.slide !== undefined) {
           var target = data.result.slide;
           var current = slideshow.getCurrentSlideIndex();
-          if (target !== current) slideshow.gotoSlide(target);
+          if (target !== current) slideshow.gotoSlide(target + 1);
         }
       } catch(e) {}
     }, 2500);

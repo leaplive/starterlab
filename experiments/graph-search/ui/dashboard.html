@@ -22,11 +22,13 @@
 
     /* Graph viewport */
     .graph-viewport {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       padding: 1rem;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
       position: relative;
       min-height: 400px;
       display: flex;
@@ -82,11 +84,13 @@
       gap: 1rem;
     }
     .gs-panel-section {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       padding: 1rem 1.25rem;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
     .gs-panel-section h3 {
       font-family: var(--font-display);
@@ -221,6 +225,22 @@
       flex: 1;
       font-size: 0.8125rem;
       padding: 0.4rem 0.75rem;
+    }
+    .gs-actions .btn-primary {
+      border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent) !important;
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent) !important;
+      color: var(--color-primary) !important;
+    }
+    .gs-actions .btn-primary:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-primary) 25%, transparent) !important;
+    }
+    .gs-actions .btn:not(.btn-primary) {
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent) !important;
+      color: var(--color-text) !important;
+      border-color: var(--color-border) !important;
+    }
+    .gs-actions .btn:not(.btn-primary):hover:not(:disabled) {
+      background: var(--color-surface) !important;
     }
   </style>
 </head>

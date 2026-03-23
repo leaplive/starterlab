@@ -12,16 +12,18 @@
   <style>
     .demo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
       gap: 1.25rem;
       margin-bottom: 2rem;
     }
     .demo-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       padding: 1.25rem 1.5rem;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
     .demo-card h3 {
       font-family: var(--font-display);
@@ -47,13 +49,15 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
-      align-items: center;
+      align-items: flex-end;
       margin-bottom: 1.5rem;
       padding: 1rem 1.25rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
     .controls-bar input[type="text"] {
       font-family: var(--font-mono);
@@ -77,20 +81,23 @@
       font-size: 0.8125rem;
       font-weight: 600;
       padding: 0.5rem 1rem;
-      border: 1px solid var(--color-border);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
       border-radius: var(--radius);
-      background: var(--color-primary);
-      color: #fff;
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      color: var(--color-primary);
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: all 0.2s ease;
     }
-    .controls-bar button:hover { opacity: 0.85; }
+    .controls-bar button:hover {
+      background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+    }
     .controls-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
     .controls-bar button.secondary {
-      background: var(--color-surface);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
       color: var(--color-text);
+      border-color: var(--color-border);
     }
-    .controls-bar button.secondary:hover { background: var(--color-bg); }
+    .controls-bar button.secondary:hover { background: var(--color-surface); }
     #gd-canvas {
       width: 100%;
       max-width: 500px;
@@ -140,14 +147,16 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.75rem;
-      align-items: center;
+      align-items: flex-end;
       margin-bottom: 1.5rem;
       padding: 1rem 1.25rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-left: 3px solid var(--color-accent, #f59e0b);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
     .admin-panel .field { display: flex; flex-direction: column; gap: 0.25rem; }
     .admin-panel label {
@@ -171,20 +180,23 @@
       font-size: 1rem;
       font-weight: 600;
       padding: 0.5rem 1rem;
-      border: 1px solid var(--color-border);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
       border-radius: var(--radius);
-      background: var(--color-primary);
-      color: #fff;
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      color: var(--color-primary);
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: all 0.2s ease;
     }
-    .admin-panel button:hover { opacity: 0.85; }
+    .admin-panel button:hover {
+      background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+    }
     .admin-panel button:disabled { opacity: 0.5; cursor: not-allowed; }
     .admin-panel button.secondary {
-      background: var(--color-surface);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
       color: var(--color-text);
+      border-color: var(--color-border);
     }
-    .admin-panel button.secondary:hover { background: var(--color-bg); }
+    .admin-panel button.secondary:hover { background: var(--color-surface); }
     .admin-label {
       font-size: 0.625rem;
       font-weight: 700;
@@ -203,6 +215,40 @@
       margin-bottom: 1rem;
     }
     #gd-canvas.picking { cursor: crosshair; }
+
+    #path-tooltip {
+      position: fixed;
+      background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--color-text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      transform: translate(-50%, -120%);
+    }
+    @media (max-width: 600px) {
+      .controls-bar, .admin-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+      .controls-bar .field, .admin-panel .field,
+      .controls-bar input, .admin-panel input,
+      .controls-bar select, .admin-panel select,
+      .controls-bar button, .admin-panel button {
+        width: 100% !important;
+      }
+      .controls-bar button, .admin-panel button {
+        padding: 0.75rem 1rem;
+      }
+    }
   </style>
 </head>
 <body data-page="dashboard">
@@ -265,7 +311,10 @@
       </div>
 
       <div class="demo-card">
-        <h3>Optimization Stats</h3>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+          <h3 style="margin-bottom: 0;">Optimization Stats</h3>
+          <div id="stat-meta" style="font-size: 0.65rem; color: var(--color-text-muted); font-family: var(--font-mono); opacity: 0.7; text-align: right;"></div>
+        </div>
         <div>
           <div class="stat primary-highlight" id="stat-iterations">—</div>
           <div class="label">Iterations</div>
@@ -318,6 +367,7 @@
     // State
     let allPaths = [];  // array of { studentId, points: [{x, y}, ...] }
     let heatmapCache = null;
+    let selectedPath = null;
 
     // DOM refs
     const canvas = document.getElementById("gd-canvas");
@@ -333,6 +383,7 @@
     const elFStart = document.getElementById("stat-fstart");
     const elFEnd = document.getElementById("stat-fend");
     const elDistance = document.getElementById("stat-distance");
+    const elStatMeta = document.getElementById("stat-meta");
 
     // Admin panel refs
     const adminPanel = document.getElementById("admin-panel");
@@ -434,7 +485,8 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function drawCanvas() {
+    function drawCanvas(maxPoints = Infinity) {
+      if (typeof maxPoints !== 'number') maxPoints = Infinity;
       // Draw heatmap (scale from HEATMAP_RES to CANVAS_SIZE)
       if (!heatmapCache) computeHeatmap();
       const tmpCanvas = document.createElement("canvas");
@@ -493,8 +545,21 @@
 
       // Optimization paths (one per student)
       allPaths.forEach((path, idx) => {
-        const pts = path.points;
+        const pts = path.points.slice(0, maxPoints);
         const color = PATH_COLORS[idx % PATH_COLORS.length];
+
+        const isSelected = selectedPath === path;
+        const isDimmed = selectedPath !== null && !isSelected;
+
+        ctx.save();
+        if (isSelected) {
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 12;
+          ctx.lineWidth = 3;
+        } else {
+          ctx.lineWidth = 1.5;
+          ctx.globalAlpha = isDimmed ? 0.3 : 1.0;
+        }
 
         // Draw path line
         if (pts.length > 1) {
@@ -515,42 +580,58 @@
           const first = pts[0];
           const [sx, sy] = toCanvas(first.x, first.y);
           ctx.strokeStyle = color;
-          ctx.lineWidth = 1.5;
           ctx.beginPath(); ctx.arc(sx, sy, 3, 0, 2 * Math.PI); ctx.stroke();
         }
+        
+        ctx.restore();
       });
     }
 
-    function updateStats() {
-      if (allPaths.length === 0 || allPaths.every(p => p.points.length === 0)) {
+    function updateStats(maxPoints = Infinity) {
+      if (typeof maxPoints !== 'number') maxPoints = Infinity;
+      const pathsToStat = selectedPath ? [selectedPath] : allPaths;
+
+      if (pathsToStat.length === 0 || pathsToStat.every(p => p.points.length === 0)) {
         elIterations.textContent = "—";
         elStart.textContent = "—";
         elEnd.textContent = "—";
         elFStart.textContent = "—";
         elFEnd.textContent = "—";
         elDistance.textContent = "—";
+        if (elStatMeta) elStatMeta.textContent = "";
         return;
       }
 
-      const totalPoints = allPaths.reduce((s, p) => s + p.points.length, 0);
-      const firstPath = allPaths[0].points;
-      const lastPath = allPaths[allPaths.length - 1].points;
+      if (elStatMeta) {
+        const trialTxt = elTrial.value.trim() || 'all trials';
+        if (pathsToStat.length === 1) {
+          elStatMeta.textContent = `${pathsToStat[0].studentId} • ${trialTxt}`;
+        } else {
+          elStatMeta.textContent = `Multiple (${pathsToStat.length}) • ${trialTxt}`;
+        }
+      }
+
+      const totalPoints = pathsToStat.reduce((s, p) => s + Math.min(p.points.length, maxPoints), 0);
+      const firstPath = pathsToStat[0].points.slice(0, maxPoints);
+      const lastPath = pathsToStat[pathsToStat.length - 1].points.slice(0, maxPoints);
+      if (!firstPath.length || !lastPath.length) return; // Wait until we render at least 1 point
       const first = firstPath[0];
       const last = lastPath[lastPath.length - 1];
 
-      elIterations.textContent = allPaths.length === 1
+      elIterations.textContent = pathsToStat.length === 1
         ? totalPoints
-        : totalPoints + " (" + allPaths.length + " paths)";
+        : totalPoints + " (" + pathsToStat.length + " paths)";
       elStart.textContent = `(${first.x.toFixed(3)}, ${first.y.toFixed(3)})`;
       elEnd.textContent = `(${last.x.toFixed(3)}, ${last.y.toFixed(3)})`;
       elFStart.textContent = fJS(first.x, first.y).toFixed(4);
       elFEnd.textContent = fJS(last.x, last.y).toFixed(4);
 
       let dist = 0;
-      for (const path of allPaths) {
-        for (let i = 1; i < path.points.length; i++) {
-          const dx = path.points[i].x - path.points[i - 1].x;
-          const dy = path.points[i].y - path.points[i - 1].y;
+      for (const path of pathsToStat) {
+        const trunc = path.points.slice(0, maxPoints);
+        for (let i = 1; i < trunc.length; i++) {
+          const dx = trunc[i].x - trunc[i - 1].x;
+          const dy = trunc[i].y - trunc[i - 1].y;
           dist += Math.sqrt(dx * dx + dy * dy);
         }
       }
@@ -588,8 +669,23 @@
           grouped.get(l.student_id).push({ x: l.args[0], y: l.args[1] });
         });
         allPaths = Array.from(grouped, ([studentId, points]) => ({ studentId, points }));
-        updateStats();
-        drawCanvas();
+        selectedPath = null;
+        
+        // Animate historical paths playback
+        if (window.animFrameId) cancelAnimationFrame(window.animFrameId);
+        let progress = 1;
+
+        function animate() {
+          let maxLen = Math.max(...allPaths.map(p => p.points.length));
+          if (progress >= maxLen) {
+            drawCanvas(); updateStats(); return;
+          }
+          drawCanvas(progress);
+          updateStats(progress);
+          progress += Math.max(1, Math.floor(maxLen / 120)); // ~2s replay
+          window.animFrameId = requestAnimationFrame(animate);
+        }
+        animate();
       } catch (e) {
         showError(e.message || String(e));
       } finally {
@@ -599,6 +695,7 @@
 
     function clearAll() {
       allPaths = [];
+      selectedPath = null;
       updateStats();
       drawCanvas();
     }
@@ -705,15 +802,123 @@
     });
 
     canvas.addEventListener("click", (e) => {
-      if (!isAdmin || !canvas.classList.contains("picking")) return;
+      if (isAdmin && canvas.classList.contains("picking")) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = CANVAS_SIZE / rect.width;
+        const scaleY = CANVAS_SIZE / rect.height;
+        const cx = (e.clientX - rect.left) * scaleX;
+        const cy = (e.clientY - rect.top) * scaleY;
+        const [startX, startY] = fromCanvas(cx, cy);
+        canvas.classList.remove("picking");
+        runGradientDescent(startX, startY);
+        return;
+      }
+      
       const rect = canvas.getBoundingClientRect();
       const scaleX = CANVAS_SIZE / rect.width;
       const scaleY = CANVAS_SIZE / rect.height;
-      const cx = (e.clientX - rect.left) * scaleX;
-      const cy = (e.clientY - rect.top) * scaleY;
-      const [startX, startY] = fromCanvas(cx, cy);
-      canvas.classList.remove("picking");
-      runGradientDescent(startX, startY);
+      const pointer = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+
+      let minDistanceSq = Infinity;
+      let clickedPath = null;
+      allPaths.forEach(path => {
+        const pts = path.points;
+        for (let i = 1; i < pts.length; i++) {
+          const [sx, sy] = toCanvas(pts[i - 1].x, pts[i - 1].y);
+          const [ex, ey] = toCanvas(pts[i].x, pts[i].y);
+          const distSq = distToSegmentSquared(pointer, {x: sx, y: sy}, {x: ex, y: ey});
+          if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            clickedPath = path;
+          }
+        }
+        if (pts.length > 0) {
+          const [sx, sy] = toCanvas(pts[0].x, pts[0].y);
+          const distSq = distToSegmentSquared(pointer, {x: sx, y: sy}, {x: sx, y: sy});
+          if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            clickedPath = path;
+          }
+        }
+      });
+
+      if (clickedPath && minDistanceSq < 64) {
+        selectedPath = clickedPath === selectedPath ? null : clickedPath;
+      } else {
+        selectedPath = null;
+      }
+      drawCanvas();
+      updateStats();
+    });
+
+    // ── Tooltip logic ──
+    const tooltip = document.createElement("div");
+    tooltip.id = "path-tooltip";
+    document.body.appendChild(tooltip);
+
+    function distToSegmentSquared(p, v, w) {
+      let l2 = (w.x - v.x)*(w.x - v.x) + (w.y - v.y)*(w.y - v.y);
+      if (l2 === 0) return (p.x - v.x)*(p.x - v.x) + (p.y - v.y)*(p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return (p.x - (v.x + t * (w.x - v.x)))**2 + (p.y - (v.y + t * (w.y - v.y)))**2;
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (canvas.classList.contains("picking")) {
+        tooltip.style.display = "none";
+        return;
+      }
+      
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = CANVAS_SIZE / rect.width;
+      const scaleY = CANVAS_SIZE / rect.height;
+      const pointer = {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+
+      let minDistanceSq = Infinity;
+      let hoveredPath = null;
+
+      allPaths.forEach(path => {
+        const pts = path.points;
+        for (let i = 1; i < pts.length; i++) {
+          const [sx, sy] = toCanvas(pts[i - 1].x, pts[i - 1].y);
+          const [ex, ey] = toCanvas(pts[i].x, pts[i].y);
+          const distSq = distToSegmentSquared(pointer, {x: sx, y: sy}, {x: ex, y: ey});
+          if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            hoveredPath = path;
+          }
+        }
+        if (pts.length > 0) {
+          const [sx, sy] = toCanvas(pts[0].x, pts[0].y);
+          const distSq = distToSegmentSquared(pointer, {x: sx, y: sy}, {x: sx, y: sy});
+          if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            hoveredPath = path;
+          }
+        }
+      });
+
+      if (hoveredPath && minDistanceSq < 64) {
+        tooltip.textContent = hoveredPath.studentId;
+        tooltip.style.display = "block";
+        tooltip.style.left = e.clientX + "px";
+        tooltip.style.top = e.clientY + "px";
+        canvas.style.cursor = "pointer";
+      } else {
+        tooltip.style.display = "none";
+        canvas.style.cursor = "default";
+      }
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
     });
 
     // Redraw on theme toggle

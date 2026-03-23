@@ -3,6 +3,7 @@ name: starterlab
 type: lab
 display_name: LEAP Starter Lab
 description: Example experiments demonstrating LEAP2 features
+icon: /assets/icon.png
 repository: https://github.com/leaplive/starterlab
 experiments:
 - name: default

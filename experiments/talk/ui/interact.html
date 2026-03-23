@@ -27,6 +27,7 @@
 html, body {
   width: 100%; height: 100%;
   background: var(--bg);
+  background-image: radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 70%);
   color: var(--text);
   font-family: var(--sans);
   -webkit-user-select: none;
@@ -81,12 +82,21 @@ header p {
 /* — Question cards — */
 
 .question-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   border-radius: 10px;
   padding: 1.1rem 1.2rem;
   margin-bottom: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.question-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  border-color: color-mix(in srgb, var(--border) 90%, transparent);
 }
 
 .question-card.answered {
@@ -144,7 +154,8 @@ header p {
 
 .option-btn.selected {
   border-color: var(--green);
-  background: color-mix(in srgb, var(--green) 8%, var(--bg));
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--green) 20%, transparent);
 }
 
 .option-radio {
@@ -178,16 +189,48 @@ header p {
 
 /* — Confirmation check — */
 
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.5); }
+  70% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 .check-icon {
   display: none;
   margin-left: auto;
   color: var(--green);
   font-size: 1rem;
   flex-shrink: 0;
+  animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .question-card.answered .check-icon {
   display: block;
+}
+
+/* — Floating Reaction Button — */
+.reaction-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 1.5rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.1s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.reaction-btn:active {
+  transform: scale(0.85);
 }
 
 /* — Status footer — */
@@ -228,6 +271,7 @@ header p {
   </header>
   <div id="questions"></div>
   <div id="status">Loading questions...</div>
+  <div class="reaction-btn" id="react-btn" title="Send reaction">❤️</div>
 </div>
 
 <script type="module">
@@ -239,6 +283,13 @@ document.getElementById("user-id").textContent = "You are: " + studentId;
 const rpc = RPCClient.fromCurrentPage({ studentId });
 const questionsEl = document.getElementById("questions");
 const statusEl = document.getElementById("status");
+const reactBtn = document.getElementById("react-btn");
+
+reactBtn.addEventListener("click", () => {
+  rpc.send_reaction("❤️").catch(console.error);
+  reactBtn.style.transform = "scale(1.3)";
+  setTimeout(() => reactBtn.style.transform = "", 100);
+});
 
 let questions = [];
 let answered = {};  // {questionId: optionIndex}

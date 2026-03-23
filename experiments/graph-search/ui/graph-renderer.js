@@ -21,6 +21,8 @@ export class GraphRenderer {
     this.graph = null;
     this.state = { visited: new Set(), current: null, start: null };
     this.onNodeClick = null;
+    this.heatmap = null;
+    this.maxHeat = 1;
 
     // Colors (read from CSS variables or fallback)
     this._colors = {
@@ -33,6 +35,11 @@ export class GraphRenderer {
       text:        "#1c1917",
       textLight:   "#fafaf9",
     };
+  }
+
+  setHeatmap(heatmap, maxHeat) {
+    this.heatmap = heatmap;
+    this.maxHeat = maxHeat || 1;
   }
 
   /** Load graph data (output of get_graph()). */
@@ -93,15 +100,31 @@ export class GraphRenderer {
         if (drawnEdges[key]) return;
         drawnEdges[key] = true;
         var bothVisited = state.visited.has(nid) && state.visited.has(nbr);
-        var stroke = bothVisited ? self._colors.edgeVisited : self._colors.edge;
-        var opacity = bothVisited ? 0.7 : 0.3;
+        
+        var heatValue = self.heatmap ? (self.heatmap[key] || 0) : 0;
+        var isHot = heatValue > 0;
+        var heatRatio = isHot ? (heatValue / self.maxHeat) : 0;
+        
+        var strokeBase = bothVisited ? self._colors.edgeVisited : self._colors.edge;
+        if (self.heatmap) {
+           strokeBase = heatRatio > 0 ? `rgba(245, 158, 11, ${0.3 + 0.7*heatRatio})` : "rgba(255,255,255,0.08)";
+        }
+        
+        var widthBase = bothVisited ? 2.5 : 1.5;
+        if (self.heatmap && isHot) widthBase += 3 * heatRatio;
+        
         var line = self._el("line", {
           x1: pos[nid][0], y1: pos[nid][1],
           x2: pos[nbr][0], y2: pos[nbr][1],
-          stroke: stroke,
-          "stroke-width": bothVisited ? 2.5 : 1.5,
-          "stroke-opacity": opacity,
+          stroke: strokeBase,
+          "stroke-width": widthBase,
+          "stroke-opacity": bothVisited ? 1.0 : (self.heatmap ? 1.0 : 0.3),
         });
+        
+        if (self.heatmap && heatRatio > 0.3) {
+           line.style.filter = "drop-shadow(0px 0px 4px rgba(245,158,11,0.6))";
+        }
+        
         edgeGroup.appendChild(line);
       });
     });

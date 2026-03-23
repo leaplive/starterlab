@@ -122,6 +122,43 @@ leap export default                   # -> default.jsonl
 leap export default --format csv      # -> default.csv
 ```
 
+## Discovery & Distribution
+
+LEAP2 experiments are designed to be shared. Distribution is handled natively via Git and the `leap` CLI, allowing you to easily pull remote experiments from the global registry into your local lab:
+
+```bash
+# Discover interactive experiments from the community
+leap discover --tag optimization
+
+# Install an experiment directly from a Git url into your lab
+leap add https://github.com/leaplive/example-lab.git
+
+# Publish your own local experiment to the registry for review
+leap publish my-experiment
+```
+
+## Advanced Browser Capabilities
+
+LEAP2 provides advanced browser integrations beyond standard student interactions:
+
+### Admin Dashboards
+You can easily build secure administrative dashboards directly into your experiment's frontend. Use `/api/auth-status` to verify privileges, and seamlessly summon the global LEAP login modal if unauthorized:
+
+```javascript
+import { AdminClient } from "/static/adminclient.js";
+
+fetch("/api/auth-status", { credentials: "same-origin" })
+  .then(r => r.json())
+  .then(async d => {
+    if (d.admin) {
+      const adminRpc = AdminClient.fromCurrentPage();
+      await adminRpc.addStudent("demo-1", "Demo User");
+    } else if (window.LEAP && window.LEAP.showLogin) {
+      window.LEAP.showLogin(() => window.location.reload());
+    }
+  });
+```
+
 ## Seed Data (Optional)
 
 Add demo students and sample log entries in one go:

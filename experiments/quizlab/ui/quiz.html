@@ -28,8 +28,10 @@
       align-items: flex-end;
       margin-bottom: 1.5rem;
       padding: 1rem 1.25rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
     }
@@ -41,6 +43,7 @@
       letter-spacing: 0.05em;
     }
     .controls-bar input[type="text"],
+    .controls-bar input[type="password"],
     .controls-bar select {
       font-family: var(--font-mono);
       font-size: 0.8125rem;
@@ -50,19 +53,27 @@
       background: var(--color-bg);
       color: var(--color-text);
     }
-    .controls-bar input[type="text"] { width: 120px; }
+    .controls-bar input[type="text"],
+    .controls-bar input[type="password"] { width: 120px; }
     .controls-bar select { min-width: 200px; }
 
     .quiz-container { max-width: 800px; }
 
     .question-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       padding: 1.5rem;
       margin-bottom: 1.25rem;
       box-shadow: var(--shadow-sm);
-      transition: border-color 0.2s;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .question-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      border-color: color-mix(in srgb, var(--color-border) 90%, transparent);
     }
     .question-card.correct { border-color: #22c55e; }
     .question-card.incorrect { border-color: #ef4444; }
@@ -124,9 +135,11 @@
       align-items: center;
       gap: 0.625rem;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.2s ease;
+      transform: scale(1);
     }
-    .choices li:hover { background: var(--color-bg); }
+    .choices li:active { transform: scale(0.98); }
+    .choices li:hover { background: color-mix(in srgb, var(--color-bg) 80%, transparent); border-color: var(--color-primary); }
     .choices li.disabled { cursor: default; opacity: 0.7; }
     .choices li label { cursor: inherit; flex: 1; }
 
@@ -186,15 +199,17 @@
     html.dark .result-banner.correct { color: #4ade80; }
     html.dark .result-banner.incorrect { color: #f87171; }
 
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     .explanation {
       margin-top: 0.625rem;
       padding: 0.75rem 1rem;
-      background: var(--color-bg);
+      background: color-mix(in srgb, var(--color-bg) 80%, transparent);
       border-left: 3px solid var(--color-primary);
       border-radius: 0 var(--radius) var(--radius) 0;
       font-size: 0.8125rem;
       color: var(--color-text-muted);
       line-height: 1.6;
+      animation: slideDown 0.3s ease-out forwards;
     }
 
     .error-msg {
@@ -226,6 +241,54 @@
     .loading {
       color: var(--color-text-muted);
       font-style: italic;
+    }
+    
+    #progress-hud {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      padding: 0.6rem 1.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--color-text);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .progress-track { width: 120px; height: 6px; background: color-mix(in srgb, var(--color-border) 50%, transparent); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--color-primary); border-radius: 3px; transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); width: 0%; }
+    @media (max-width: 600px) {
+      .controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+      .controls-bar .field,
+      .controls-bar input,
+      .controls-bar select,
+      .controls-bar button {
+        width: 100% !important;
+      }
+      #progress-hud {
+        width: 90%;
+        justify-content: space-between;
+      }
+      .numeric-input {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-submit {
+        width: 100%;
+        padding: 0.75rem;
+      }
     }
   </style>
 </head>
@@ -260,6 +323,11 @@
 
     <div class="quiz-container" id="quiz-container"></div>
   </main>
+
+  <div id="progress-hud">
+    <span id="hud-text">0 / 0 answered</span>
+    <div class="progress-track"><div class="progress-fill" id="hud-fill"></div></div>
+  </div>
 
   <script src="/static/footer.js"></script>
   <script type="module">
@@ -506,6 +574,20 @@
       } else {
         const earned = Object.values(scores).reduce((s, v) => s + v, 0);
         bar.innerHTML = "Score: <span class=\"scored\">" + earned + " / " + total + "</span> pts";
+      }
+
+      // Update HUD
+      const hud = document.getElementById("progress-hud");
+      if (parsedQuestions.length > 0) {
+        hud.style.display = "flex";
+        let answered = 0;
+        document.querySelectorAll(".question-card .btn-submit").forEach(btn => {
+          if (btn.disabled && btn.textContent !== "Grading...") answered++;
+        });
+        document.getElementById("hud-text").textContent = answered + " of " + parsedQuestions.length + " answered";
+        document.getElementById("hud-fill").style.width = (answered / parsedQuestions.length * 100) + "%";
+      } else {
+        hud.style.display = "none";
       }
     }
 

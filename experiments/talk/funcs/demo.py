@@ -1,38 +1,40 @@
 """Live demo — audience opinion poll about LEAP."""
 
+import time
 from leap import adminonly, ctx, nolog, noregcheck, ratelimit, withctx
 
 _current_slide = 1
+_reactions: list[dict] = []
 
 QUESTIONS = [
     {
         "id": "q1",
-        "question": "What would you most want to use LEAP for?",
+        "question": "Your in-class demos are mostly...",
         "options": [
-            "In-class algorithm demos",
-            "Homework / lab assignments",
-            "Live coding exercises",
-            "Student research projects",
+            "Me talking, students watching",
+            "One brave volunteer at a time",
+            "Everyone hacking in parallel",
+            "What demos?",
         ],
     },
     {
         "id": "q2",
-        "question": "What's the biggest barrier to interactive demos today?",
+        "question": "What kills your demo ideas before they start?",
         "options": [
-            "Too much setup time",
-            "Hard to share across courses",
-            "Students don't participate",
-            "No way to see student work live",
+            "Too much setup work",
+            "Can't see what students are doing",
+            "Students freeze up in public",
+            "It worked on my machine...",
         ],
     },
     {
         "id": "q3",
-        "question": "Which LEAP feature interests you most?",
+        "question": "Which LEAP feature is most useful to you?",
         "options": [
             "Drop a function, get an API",
-            "Live dashboard of student work",
-            "Multi-language client support",
-            "Shareable lab registry",
+            "See every student's work live",
+            "Share labs across universities",
+            "Students code in any language",
         ],
     },
 ]
@@ -91,3 +93,22 @@ def submit_answer(question_id: str, answer: int) -> dict:
 def get_results() -> dict:
     """Get current poll results."""
     return _responses
+
+
+@nolog
+@noregcheck
+def send_reaction(reaction: str) -> dict:
+    """Send a live audience reaction emoji."""
+    _reactions.append({"emoji": reaction, "time": time.time()})
+    if len(_reactions) > 1000:
+        _reactions.pop(0)
+    return {"ok": True}
+
+
+@ratelimit(False)
+@nolog
+@noregcheck
+def get_reactions(since: float = 0.0) -> dict:
+    """Fetch reactions since a particular timestamp."""
+    recent = [r for r in _reactions if r["time"] > since]
+    return {"reactions": recent, "now": time.time()}

@@ -18,8 +18,10 @@
       align-items: flex-end;
       margin-bottom: 1.5rem;
       padding: 1rem 1.25rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
     }
@@ -54,12 +56,20 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.625rem 1rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       flex: 1;
       min-width: 140px;
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s;
+    }
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border-color: color-mix(in srgb, var(--color-border) 90%, transparent);
     }
     .stat-pill .stat-value {
       font-family: var(--font-display);
@@ -104,10 +114,12 @@
     .scores-wrap {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
       animation: fadeSlideIn 0.35s ease-out;
     }
     .scores-table {
@@ -128,7 +140,9 @@
       font-size: 0.6875rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      background: var(--color-bg);
+      background: color-mix(in srgb, var(--color-bg) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 2;
@@ -146,7 +160,9 @@
       font-size: 0.75rem;
       position: sticky;
       left: 0;
-      background: var(--color-surface);
+      background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 1;
     }
     .scores-table th.col-total,
@@ -308,6 +324,28 @@
     @keyframes fadeRow {
       from { opacity: 0; }
       to   { opacity: 1; }
+    }
+    @media (max-width: 600px) {
+      .controls-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+      .controls-bar .field,
+      .controls-bar select {
+        width: 100% !important;
+      }
+      .stats-strip {
+        flex-direction: column;
+      }
+      .scores-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-export {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>

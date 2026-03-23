@@ -12,16 +12,18 @@
   <style>
     .demo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
       gap: 1.25rem;
       margin-bottom: 2rem;
     }
     .demo-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius-lg);
       padding: 1.25rem 1.5rem;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
     }
     .demo-card h3 {
       font-family: var(--font-display);
@@ -271,7 +273,41 @@ console.log(await client.help());
 console.log(await client.isRegistered());       // true/false
 console.log(await client.fetchLogs({ n: 5 }));  // latest 5 logs</code></pre>
 
-      <h4 class="how-h4">6. Next steps</h4>
+      <h4 class="how-h4">6. Build Admin Dashboards & Auth Gates</h4>
+      <p class="how-p">
+        LEAP2 naturally supports secure Admin dashboarding. Use the <code>/api/auth-status</code> endpoint to verify access, and safely summon the platform's global login modal via <code>window.LEAP.showLogin()</code> if they are unauthenticated.
+      </p>
+      <pre><code class="language-javascript">import { AdminClient } from "/static/adminclient.js";
+
+fetch("/api/auth-status", { credentials: "same-origin" })
+  .then(r => r.json())
+  .then(async d => {
+    if (d.admin) {
+      // User is a verified Admin
+      const adminClient = AdminClient.fromCurrentPage();
+      await adminClient.addStudent("demo1", "Demo User");
+    } else {
+      // Summon global login modal natively
+      if (window.LEAP && window.LEAP.showLogin) {
+        window.LEAP.showLogin(() => window.location.reload());
+      }
+    }
+  });</code></pre>
+
+      <h4 class="how-h4">7. Publishing & Community Registry</h4>
+      <p class="how-p">
+        LEAP2 experiments are designed to be shared. Distribution is handled via Git and our CLI, allowing you to easily pull remote experiments from the global registry directly into your local lab:
+      </p>
+      <pre><code class="language-bash"># Discover interactive experiments from the community
+leap discover --tag optimization
+
+# Install an experiment directly from a Git URL into your lab
+leap add https://github.com/user/cool-lab.git
+
+# Publish your own local experiment to the registry for review
+leap publish my-experiment</code></pre>
+
+      <h4 class="how-h4">8. Next steps</h4>
       <ul class="how-list">
         <li>Add a refresh button or <code>setInterval</code> to poll <code>getLogOptions()</code> / <code>getLogs()</code> for live updates.</li>
         <li>Use <code>getLogs({ studentId, trial })</code> to build per-student or per-trial views.</li>

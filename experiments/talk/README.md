@@ -19,13 +19,13 @@ Slides for the 19th CCSC Southwestern conference lightning talk at UC Riverside 
 
 ## Features
 
-### Live Audience Demo
+### Live Audience Poll
 
 The talk itself is a LEAP experiment. During the presentation:
 
 1. **QR slide** — audience scans to open `interact.html` on their phones
-2. **Interact page** — audience picks a starting point (x, y) on a 2D plane
-3. **Live dashboard** — presenter shows `live.html` with all points appearing in real-time
+2. **Interact page** — audience answers quick poll questions about LEAP
+3. **Live dashboard** — presenter shows `live.html` with bar charts updating in real-time
 
 ### Slide Sync
 
@@ -60,16 +60,18 @@ Slides support inline (`$...$`) and display (`$$...$$`) math via KaTeX, rendered
 | Page | Description |
 |------|-------------|
 | `slides.html` | Remark-based slide deck (entry point) |
-| `interact.html` | Audience interaction page (pick a point) |
-| `live.html` | Real-time dashboard of audience submissions |
+| `interact.html` | Audience poll page (mobile-friendly) |
+| `live.html` | Real-time bar charts of poll responses |
 
 ## Functions
 
 | Function | Decorators | Description |
 |----------|------------|-------------|
-| `pick_start(x, y)` | `@noregcheck` | Record a starting point on the 2D plane |
+| `get_questions()` | `@nolog @noregcheck` | Get the list of poll questions |
+| `submit_answer(question_id, answer)` | `@withctx @noregcheck` | Submit an answer to a poll question |
+| `get_results()` | `@ratelimit(False) @nolog @noregcheck` | Get current poll results |
 | `set_slide(n)` | `@adminonly @nolog @noregcheck` | Set the current slide number (presenter only) |
-| `get_slide()` | `@nolog @noregcheck` | Get the current slide number |
+| `get_slide()` | `@ratelimit(False) @nolog @noregcheck` | Get the current slide number |
 
 ## Setup (day-of)
 

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Quick Poll — LEAP2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0c0d11;
+  --surface: #13151c;
+  --border:  #252837;
+  --accent:  #60a5fa;
+  --purple:  #a78bfa;
+  --green:   #34d399;
+  --amber:   #fbbf24;
+  --text:    #e2e8f0;
+  --muted:   #64748b;
+  --sans:    'DM Sans', sans-serif;
+  --serif:   'DM Serif Display', serif;
+  --mono:    'DM Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  position: relative;
+  min-height: 100%;
+}
+
+/* — Bottom accent bar — */
+#app::after {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--purple) 60%, transparent 100%);
+  z-index: 20;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+header h1 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+header p {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+
+#user-id {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  margin-top: 0.25rem;
+}
+
+/* — Question cards — */
+
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.question-card.answered {
+  border-color: var(--green);
+}
+
+.question-num {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.4rem;
+}
+
+.question-text {
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 0.8rem;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option-btn:active {
+  transform: scale(0.98);
+}
+
+.option-btn:hover {
+  border-color: var(--accent);
+}
+
+.option-btn.selected {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 8%, var(--bg));
+}
+
+.option-radio {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.option-btn.selected .option-radio {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.option-radio::after {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--bg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.option-btn.selected .option-radio::after {
+  opacity: 1;
+}
+
+/* — Confirmation check — */
+
+.check-icon {
+  display: none;
+  margin-left: auto;
+  color: var(--green);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.question-card.answered .check-icon {
+  display: block;
+}
+
+/* — Status footer — */
+
+#status {
+  text-align: center;
+  margin-top: 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: color 0.3s ease;
+}
+
+#status.done {
+  color: var(--green);
+}
+
+/* — Light theme — */
+[data-theme="light"] {
+  --bg:      #f8f9fb;
+  --surface: #ffffff;
+  --border:  #d1d5db;
+  --accent:  #2563eb;
+  --purple:  #7c3aed;
+  --green:   #059669;
+  --amber:   #d97706;
+  --text:    #1e293b;
+  --muted:   #64748b;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Quick Poll</h1>
+    <p>Tell us what you think about LEAP</p>
+    <div id="user-id"></div>
+  </header>
+  <div id="questions"></div>
+  <div id="status">Loading questions...</div>
+</div>
+
+<script type="module">
+import { RPCClient } from "/static/rpcclient.js";
+
+const studentId = Math.random().toString(36).slice(2, 8);
+document.getElementById("user-id").textContent = "You are: " + studentId;
+
+const rpc = RPCClient.fromCurrentPage({ studentId });
+const questionsEl = document.getElementById("questions");
+const statusEl = document.getElementById("status");
+
+let questions = [];
+let answered = {};  // {questionId: optionIndex}
+
+async function loadQuestions() {
+  try {
+    questions = await rpc.get_questions();
+    render();
+    statusEl.textContent = "Tap an option to vote";
+  } catch (err) {
+    statusEl.textContent = "Error loading questions";
+    console.error(err);
+  }
+}
+
+function render() {
+  questionsEl.innerHTML = "";
+  questions.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "question-card" + (answered[q.id] !== undefined ? " answered" : "");
+
+    const num = document.createElement("div");
+    num.className = "question-num";
+    num.textContent = "Question " + (qi + 1);
+    card.appendChild(num);
+
+    const text = document.createElement("div");
+    text.className = "question-text";
+    text.textContent = q.question;
+    card.appendChild(text);
+
+    const opts = document.createElement("div");
+    opts.className = "options";
+
+    q.options.forEach((opt, oi) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn" + (answered[q.id] === oi ? " selected" : "");
+
+      const radio = document.createElement("span");
+      radio.className = "option-radio";
+      btn.appendChild(radio);
+
+      const label = document.createElement("span");
+      label.textContent = opt;
+      btn.appendChild(label);
+
+      const check = document.createElement("span");
+      check.className = "check-icon";
+      check.textContent = "\u2713";
+      btn.appendChild(check);
+
+      btn.addEventListener("click", () => submitAnswer(q.id, oi));
+      opts.appendChild(btn);
+    });
+
+    card.appendChild(opts);
+    questionsEl.appendChild(card);
+  });
+}
+
+async function submitAnswer(questionId, optionIndex) {
+  answered[questionId] = optionIndex;
+  render();
+
+  try {
+    await rpc.submit_answer(questionId, optionIndex);
+  } catch (err) {
+    console.error("Submit error:", err);
+  }
+
+  const total = questions.length;
+  const done = Object.keys(answered).length;
+  if (done >= total) {
+    statusEl.textContent = "All done — thanks!";
+    statusEl.className = "done";
+  } else {
+    statusEl.textContent = done + " of " + total + " answered";
+  }
+}
+
+// — Theme: URL param + postMessage —
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get("theme") === "light") document.documentElement.setAttribute("data-theme", "light");
+  window.addEventListener("message", function(e) {
+    if (e.data && e.data.theme) {
+      if (e.data.theme === "light") document.documentElement.setAttribute("data-theme", "light");
+      else document.documentElement.removeAttribute("data-theme");
+    }
+  });
+})();
+
+loadQuestions();
+</script>
+</body>
+</html>

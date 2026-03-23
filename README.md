@@ -1,1 +1,51 @@
-# starterlab
+---
+name: starterlab
+type: lab
+display_name: LEAP Starter Lab
+description: Example experiments demonstrating LEAP2 features
+repository: https://github.com/leaplive/starterlab
+experiments:
+- name: default
+- name: gradient-descent-2d
+- name: graph-search
+- name: monte-carlo
+- name: quizlab
+- name: talk
+author: Sampad Mohanty
+tags:
+- leap
+- example
+- starter
+organization: University of Southern California
+---
+
+# LEAP Starter Lab
+
+A collection of example experiments for [LEAP2](https://github.com/leaplive/LEAP2).
+
+## Quick start
+
+```bash
+git clone https://github.com/leaplive/starterlab.git
+cd starterlab
+leap init
+leap run
+```
+
+## Experiments
+
+| Name | Description |
+|------|-------------|
+| **default** | Starter experiment demonstrating RPC, logging, decorators, and registration |
+| **gradient-descent-2d** | Optimize a 2D function with two local minima using gradient descent |
+| **graph-search** | Explore graphs using BFS or DFS — grids, trees, and custom graphs |
+| **monte-carlo** | Estimate pi by sampling random points inside the unit circle |
+| **quizlab** | Markdown-based quizzes with auto-grading and score tracking |
+| **talk** | Lightning talk slides — SIGCSE TS 2026 |
+
+## Tests
+
+```bash
+pip install pytest
+pytest tests/
+```

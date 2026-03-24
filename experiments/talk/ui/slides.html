@@ -404,7 +404,15 @@ class: title-slide, middle
   <td class="affil">University of Southern California</td>
 </tr></table>
 
-<div style="text-align:center;margin-top:0.8rem;"><div id="qr-slides" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div><div style="font-family:var(--mono);font-size:0.55rem;color:#60a5fa;margin-top:4px;">Follow along</div></div>
+<div style="display:flex;justify-content:center;align-items:center;gap:2rem;margin-top:0.8rem;">
+<div style="text-align:center;"><div id="qr-slides" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div><div style="font-family:var(--mono);font-size:0.7rem;color:#60a5fa;margin-top:4px;">Follow along</div></div>
+<div style="width:1px;height:60px;background:var(--border);"></div>
+<div style="display:flex;align-items:center;gap:1.2rem;">
+<img src="assets/viterbi-logo.png" alt="USC Viterbi" style="height:35px;">
+<img src="assets/anrg-logo.png" alt="ANRG" style="height:45px;">
+<img src="assets/cams-logo.png" alt="CAMS" style="height:45px;">
+</div>
+</div>
 
 <span class="slide-hints" style="font-size:0.6rem;color:#475569;opacity:0.5;">`f` fullscreen &nbsp; · &nbsp; `t` toggle theme &nbsp; · &nbsp; `l` admin login to sync slides</span>
 
@@ -884,7 +892,7 @@ try {
   qr2.make();
   var qrSlides = document.getElementById('qr-slides');
   if (qrSlides) {
-    qrSlides.innerHTML = colorQR(qr2.createSvgTag(4, 0), '#60a5fa');
+    qrSlides.innerHTML = colorQR(qr2.createSvgTag(6, 0), '#60a5fa');
   }
 } catch (e) {
   console.warn('Slides QR generation failed:', e);

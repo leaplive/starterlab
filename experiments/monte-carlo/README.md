@@ -3,8 +3,8 @@ name: monte-carlo
 type: experiment
 display_name: Monte Carlo Pi
 description: Estimate pi by sampling random points and checking if they fall inside the unit circle.
-author: "Sampad Mohanty"
-organization: "University of Southern California"
+authors: "Sampad Mohanty"
+organizations: "University of Southern California"
 tags: [probability, statistics, monte-carlo, sampling, pi]
 version: "1.0.0"
 entry_point: dashboard.html

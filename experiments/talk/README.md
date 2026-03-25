@@ -3,8 +3,8 @@ name: talk
 type: experiment
 display_name: "LEAP2 Lightning Talk"
 description: "Lightning talk slides — SIGCSE TS 2026"
-author: "Sampad Mohanty"
-organization: "University of Southern California"
+authors: "Sampad Mohanty"
+organizations: "University of Southern California"
 tags: [talk, slides, demo]
 entry_point: slides.html
 require_registration: false

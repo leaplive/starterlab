@@ -3,3 +3,4 @@ experiments/*/db/
 __pycache__/
 *.pyc
 .env
+experiments/benchmark/ui/benchmark-results.json

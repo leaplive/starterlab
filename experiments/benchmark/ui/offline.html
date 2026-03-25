@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Offline benchmark results — saved from pytest server-side benchmarks.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <title>Offline Benchmark — LEAP2</title>
+  <script>(function(){var t=localStorage.getItem("leap-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark")})()</script>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme-toggle.js" defer></script>
+  <style>
+    /* ═══════════════════════════════════════
+       Offline Benchmark — Laboratory Report
+       ═══════════════════════════════════════ */
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes barGrow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes barGrowY {
+      from { transform: scaleY(0); }
+      to   { transform: scaleY(1); }
+    }
+
+    /* Dot-grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, color-mix(in srgb, var(--color-text) 4%, transparent) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    main.container { position: relative; z-index: 1; }
+
+    .anim-fade-up {
+      animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* Card system — matches dashboard */
+    .b-card {
+      background: color-mix(in srgb, var(--color-surface) 65%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08);
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .b-card:hover {
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.1);
+    }
+    .b-card-title {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .b-card-title::before {
+      content: "";
+      width: 3px;
+      height: 1em;
+      background: var(--color-primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Header */
+    .bench-header { margin-bottom: 2rem; }
+    .bench-header h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .bench-subtitle {
+      color: var(--color-text-muted);
+      font-size: 0.9375rem;
+      margin-top: 0.375rem;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+    .bench-nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .bench-nav-link:hover { opacity: 0.8; }
+    .header-rule {
+      margin-top: 1.25rem;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-accent), transparent);
+      border: none;
+      border-radius: 1px;
+      opacity: 0.4;
+    }
+
+    /* Stamp / metadata bar */
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .meta-label {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+    }
+    .meta-value {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+    }
+    .meta-ago {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+    /* No data state */
+    .no-data {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--color-text-muted);
+    }
+    .no-data-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 1.25rem;
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-primary);
+    }
+    .no-data h2 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--color-text);
+    }
+    .no-data p {
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    /* Command block (shared by no-data and re-run card) */
+    .cmd-block {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 0.125rem 0.125rem 0.125rem 1rem;
+      max-width: 560px;
+    }
+    .no-data .cmd-block { margin: 1rem auto 0; }
+    .cmd-block code {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+    .cmd-block .btn-copy-cmd {
+      padding: 0.4375rem 0.75rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: calc(var(--radius) - 2px);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.25rem;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .cmd-block .btn-copy-cmd:hover {
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-text-muted) 40%, transparent);
+    }
+    .cmd-block .btn-copy-cmd.copied {
+      color: var(--color-success, #2d7a4f);
+      border-color: var(--color-success, #2d7a4f);
+    }
+
+    /* Re-run card */
+    .rerun-card {
+      margin-top: 1.25rem;
+      margin-bottom: 0;
+    }
+    .rerun-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .rerun-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-primary);
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+    .rerun-body { flex: 1; min-width: 0; }
+    .rerun-body h3 {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.375rem;
+    }
+    .rerun-body p {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      line-height: 1.55;
+      margin-bottom: 0;
+    }
+    .rerun-steps {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rerun-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+    }
+    .rerun-step-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      color: var(--color-primary);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Chart containers */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .chart-wrap {
+      position: relative;
+      min-height: 280px;
+    }
+    .chart-wrap canvas {
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    /* Results table */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+    .results-table th {
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      padding: 0.625rem 0.75rem;
+      border-bottom: 2px solid var(--color-border);
+    }
+    .results-table th:not(:first-child) { text-align: right; }
+    .results-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+      vertical-align: middle;
+    }
+    .results-table td:not(:first-child) {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+    }
+    .results-table tbody tr {
+      transition: background 0.15s;
+    }
+    .results-table tbody tr:hover {
+      background: color-mix(in srgb, var(--color-surface) 80%, var(--color-primary-light));
+    }
+    .scenario-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+    .scenario-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .scenario-desc {
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+      margin-top: 0.125rem;
+    }
+    .lat-good { color: #22c55e; }
+    .lat-ok   { color: #f59e0b; }
+    .lat-bad  { color: #ef4444; }
+    .err-val  { color: #ef4444; font-weight: 600; }
+    .err-zero { color: var(--color-text-muted); opacity: 0.5; }
+
+    /* Insights panel */
+    .insights-section { margin-bottom: 0; }
+    .insights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 30%, transparent);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .insight-item:last-child { border-bottom: none; }
+    .insight-icon {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      color: var(--color-primary);
+    }
+    .insight-delta {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #f59e0b;
+    }
+    .insight-total {
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    /* Latency horizontal bars */
+    .lat-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.375rem 0;
+    }
+    .lat-bar-label {
+      width: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .lat-bar-track {
+      flex: 1;
+      height: 20px;
+      background: color-mix(in srgb, var(--color-border) 30%, transparent);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .lat-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transform-origin: left;
+      animation: barGrow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .lat-bar-value {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      width: 72px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .insights-grid { grid-template-columns: 1fr; }
+      .rerun-inner { flex-direction: column; }
+      .cmd-block { flex-direction: column; align-items: stretch; }
+      .cmd-block code { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body data-page="benchmark">
+  <a class="skip-to-content" href="#main">Skip to content</a>
+  <script src="/static/navbar.js"></script>
+
+  <main class="container" id="main">
+    <nav class="breadcrumb">
+      <a href="/">Experiments</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href="dashboard.html">benchmark</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>offline</span>
+    </nav>
+
+    <div class="bench-header anim-fade-up" style="animation-delay: 0.05s">
+      <h1>Offline Benchmark</h1>
+      <p class="bench-subtitle">
+        Server-side benchmark results from <code style="font-size:0.85em">pytest</code> — bypasses the browser's
+        connection limit for true pipeline throughput measurement.
+      </p>
+      <a class="bench-nav-link" href="dashboard.html">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.56 7.25H13a.75.75 0 0 1 0 1.5H4.56l3.22 3.22a.75.75 0 0 1 0 1.06Z"/></svg>
+        Live benchmark dashboard
+      </a>
+      <hr class="header-rule">
+    </div>
+
+    <div id="content"></div>
+  </main>
+
+  <script src="/static/footer.js"></script>
+  <script>
+    /* ═══════════════════════════════════════
+       Offline Benchmark Results Viewer
+       ═══════════════════════════════════════ */
+
+    const RERUN_CMD = "cd starterlab && python -m pytest tests/test_benchmark.py -v";
+    const SCENARIO_DESCS = {
+      noop_minimal: "no log, no reg, no rate limit",
+      noop_regcheck: "DB registration lookup",
+      noop_logged: "DuckDB INSERT per call",
+      noop_rate_limited: "120/min rate limit",
+      noop_full: "reg + limit + logging",
+      noop_adminonly: "admin session check",
+    };
+
+    const contentEl = document.getElementById("content");
+
+    function copyCmd(btn) {
+      navigator.clipboard.writeText(RERUN_CMD).then(() => {
+        btn.classList.add("copied");
+        btn.textContent = "Copied!";
+        setTimeout(() => {
+          btn.classList.remove("copied");
+          btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25ZM5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg> Copy';
+        }, 2000);
+      });
+    }
+
+    function timeAgo(iso) {
+      const diff = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return mins + "m ago";
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + "h ago";
+      const days = Math.floor(hrs / 24);
+      if (days === 1) return "yesterday";
+      if (days < 30) return days + "d ago";
+      return "";
+    }
+
+    async function init() {
+      let data;
+      try {
+        const resp = await fetch("benchmark-results.json");
+        if (!resp.ok) throw new Error(resp.status);
+        data = await resp.json();
+      } catch {
+        contentEl.innerHTML = `
+          <div class="b-card no-data anim-fade-up">
+            <div class="no-data-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <h2>No benchmark results found</h2>
+            <p>Run the server-side benchmarks to generate results. This measures true pipeline throughput via pytest's TestClient.</p>
+            <div class="cmd-block">
+              <code>${RERUN_CMD}</code>
+              <button class="btn-copy-cmd" onclick="copyCmd(this)">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25ZM5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const scenarios = data.scenarios || {};
+      const keys = Object.keys(scenarios);
+      if (!keys.length) {
+        contentEl.innerHTML = `<div class="b-card no-data anim-fade-up"><h2>No scenario data in results file</h2></div>`;
+        return;
+      }
+
+      // Format helpers
+      const fmtNum = n => n.toLocaleString();
+      const fmtMs = ms => ms < 1 ? ms.toFixed(2) : ms < 100 ? ms.toFixed(1) : Math.round(ms);
+      const fmtDate = iso => {
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+          + " at " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+      };
+      const latClass = ms => ms < 10 ? "lat-good" : ms < 100 ? "lat-ok" : "lat-bad";
+
+      // ── Metadata bar ──
+      const ago = timeAgo(data.timestamp);
+      const metaHtml = `
+        <div class="meta-bar anim-fade-up" style="animation-delay: 0.1s">
+          <div class="meta-item">
+            <span class="meta-label">Run</span>
+            <span class="meta-value">${fmtDate(data.timestamp)}</span>
+            ${ago ? `<span class="meta-ago">(${ago})</span>` : ""}
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Concurrency</span>
+            <span class="meta-value">${data.config?.concurrency || "\u2014"}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Duration</span>
+            <span class="meta-value">${data.config?.duration_s || "\u2014"}s</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Scenarios</span>
+            <span class="meta-value">${keys.length}</span>
+          </div>
+        </div>`;
+
+      // ── Charts ──
+      const chartsHtml = `
+        <div class="charts-grid anim-fade-up" style="animation-delay: 0.15s">
+          <div class="b-card">
+            <div class="b-card-title">Throughput (RPS)</div>
+            <div class="chart-wrap"><canvas id="chart-rps"></canvas></div>
+          </div>
+          <div class="b-card">
+            <div class="b-card-title">Latency Distribution</div>
+            <div class="chart-wrap"><canvas id="chart-lat"></canvas></div>
+          </div>
+        </div>`;
+
+      // ── Results table ──
+      let tableRows = "";
+      for (const key of keys) {
+        const s = scenarios[key];
+        const desc = SCENARIO_DESCS[key] || "";
+        tableRows += `
+          <tr>
+            <td>
+              <span class="scenario-name"><span class="scenario-dot" style="background:${s.color}"></span>${s.label}</span>
+              ${desc ? `<div class="scenario-desc">${desc}</div>` : ""}
+            </td>
+            <td>${fmtNum(s.total)}</td>
+            <td style="font-weight:700">${fmtNum(Math.round(s.rps))}</td>
+            <td class="${latClass(s.median_ms)}">${fmtMs(s.median_ms)} ms</td>
+            <td class="${latClass(s.p95_ms)}">${fmtMs(s.p95_ms)} ms</td>
+            <td class="${latClass(s.p99_ms)}">${fmtMs(s.p99_ms)} ms</td>
+            <td class="${s.errors > 0 ? 'err-val' : 'err-zero'}">${s.errors > 0 ? fmtNum(s.errors) : "0"}</td>
+          </tr>`;
+      }
+      const tableHtml = `
+        <div class="b-card anim-fade-up" style="animation-delay: 0.2s">
+          <div class="b-card-title">Per-Scenario Results</div>
+          <div style="overflow-x:auto; margin:0 -1.5rem; padding:0 1.5rem;">
+            <table class="results-table">
+              <thead><tr>
+                <th style="min-width:160px">Scenario</th>
+                <th>Requests</th><th>RPS</th>
+                <th>Median</th><th>P95</th><th>P99</th><th>Errors</th>
+              </tr></thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+
+      // ── Insights ──
+      const minimal = scenarios["noop_minimal"];
+      let insightsItems = "";
+      if (minimal) {
+        const compare = (key, label) => {
+          const other = scenarios[key];
+          if (!other || key === "noop_minimal") return;
+          const diff = other.median_ms - minimal.median_ms;
+          if (diff > 0.1) {
+            insightsItems += `
+              <div class="insight-item">
+                <span class="insight-icon">&Delta;</span>
+                <span><strong>${label}</strong> adds <span class="insight-delta">+${fmtMs(diff)} ms</span> per call over baseline.</span>
+              </div>`;
+          } else {
+            insightsItems += `
+              <div class="insight-item">
+                <span class="insight-icon">&asymp;</span>
+                <span><strong>${label}</strong> is within baseline (&plusmn;${fmtMs(Math.abs(diff))} ms).</span>
+              </div>`;
+          }
+        };
+        compare("noop_regcheck", "Registration check");
+        compare("noop_logged", "DuckDB logging");
+        compare("noop_rate_limited", "Rate limiting");
+        compare("noop_full", "Full pipeline");
+        compare("noop_adminonly", "Admin auth");
+      }
+
+      const totalReqs = keys.reduce((s, k) => s + scenarios[k].total, 0);
+      const peakRps = Math.max(...keys.map(k => scenarios[k].rps));
+      insightsItems += `
+        <div class="insight-item">
+          <span class="insight-icon">&Sigma;</span>
+          <span><span class="insight-total">${fmtNum(totalReqs)}</span> total requests across ${keys.length} scenarios.</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-icon">&zigrarr;</span>
+          <span>Peak throughput: <span class="insight-total">${fmtNum(Math.round(peakRps))}</span> req/s (${scenarios[keys.reduce((a, b) => scenarios[a].rps > scenarios[b].rps ? a : b)]?.label}).</span>
+        </div>`;
+
+      // Latency bars
+      const maxMedian = Math.max(...keys.map(k => scenarios[k].median_ms));
+      let barsHtml = "";
+      for (const key of keys) {
+        const s = scenarios[key];
+        const pct = maxMedian > 0 ? (s.median_ms / maxMedian * 100) : 0;
+        barsHtml += `
+          <div class="lat-bar-row">
+            <span class="lat-bar-label" style="color:${s.color}">${s.label}</span>
+            <div class="lat-bar-track">
+              <div class="lat-bar-fill" style="width:${pct}%; background:${s.color}; animation-delay:${keys.indexOf(key) * 0.08}s"></div>
+            </div>
+            <span class="lat-bar-value ${latClass(s.median_ms)}">${fmtMs(s.median_ms)} ms</span>
+          </div>`;
+      }
+
+      const insightsHtml = `
+        <div class="b-card insights-section anim-fade-up" style="animation-delay: 0.25s">
+          <div class="b-card-title">Analysis</div>
+          <div class="insights-grid">
+            <div>
+              <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--color-text-muted); margin-bottom:0.75rem;">Median Latency Comparison</div>
+              ${barsHtml}
+            </div>
+            <div>${insightsItems}</div>
+          </div>
+        </div>`;
+
+      // ── Re-run instructions ──
+      const rerunHtml = `
+        <div class="b-card rerun-card anim-fade-up" style="animation-delay: 0.3s">
+          <div class="rerun-inner">
+            <div class="rerun-icon">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.071-1.071A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.071 1.071A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"/></svg>
+            </div>
+            <div class="rerun-body">
+              <h3>Re-run Benchmarks</h3>
+              <p>Generate fresh results by running the server-side benchmark suite. The test uses FastAPI's TestClient
+                 to bypass browser connection limits and measures true pipeline throughput.</p>
+              <div class="rerun-steps">
+                <div class="rerun-step">
+                  <span class="rerun-step-num">1</span>
+                  <span>Make sure the LEAP server is <strong>not</strong> running (tests start their own).</span>
+                </div>
+                <div class="rerun-step">
+                  <span class="rerun-step-num">2</span>
+                  <span>Run the benchmark from the starterlab directory:</span>
+                </div>
+              </div>
+              <div class="cmd-block" style="margin-top:0.5rem">
+                <code>${RERUN_CMD}</code>
+                <button class="btn-copy-cmd" onclick="copyCmd(this)">
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25ZM5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+                  Copy
+                </button>
+              </div>
+              <div class="rerun-steps" style="margin-top:0.5rem">
+                <div class="rerun-step">
+                  <span class="rerun-step-num">3</span>
+                  <span>Reload this page to see the updated results.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      contentEl.innerHTML = metaHtml + chartsHtml + tableHtml + insightsHtml + rerunHtml;
+
+      // ── Draw charts ──
+      drawRpsChart(keys, scenarios);
+      drawLatencyChart(keys, scenarios);
+    }
+
+    // ── RPS Bar Chart (vertical) ──
+    function drawRpsChart(keys, scenarios) {
+      const canvas = document.getElementById("chart-rps");
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = rect.height;
+
+      const pad = { top: 20, right: 20, bottom: 56, left: 54 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const maxRps = Math.max(...keys.map(k => scenarios[k].rps)) * 1.15;
+      const barW = Math.min(40, (plotW / keys.length) * 0.6);
+      const gap = (plotW - barW * keys.length) / (keys.length + 1);
+
+      // Grid
+      const style = getComputedStyle(document.documentElement);
+      const textColor = style.getPropertyValue("--color-text-muted").trim() || "#888";
+      const gridColor = style.getPropertyValue("--color-border").trim() || "#eee";
+
+      ctx.font = `600 10px ${style.getPropertyValue("--font-mono").trim() || "monospace"}`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      const gridLines = 5;
+      for (let i = 0; i <= gridLines; i++) {
+        const val = Math.round((maxRps / gridLines) * i);
+        const y = pad.top + plotH - (plotH * (val / maxRps));
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        ctx.fillStyle = textColor;
+        ctx.fillText(val, pad.left - 8, y);
+      }
+
+      // Bars
+      keys.forEach((key, i) => {
+        const s = scenarios[key];
+        const x = pad.left + gap + i * (barW + gap);
+        const barH = (s.rps / maxRps) * plotH;
+        const y = pad.top + plotH - barH;
+
+        // Bar with gradient
+        const grad = ctx.createLinearGradient(x, y, x, pad.top + plotH);
+        grad.addColorStop(0, s.color);
+        grad.addColorStop(1, s.color + "44");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        ctx.fill();
+
+        // Value label
+        ctx.fillStyle = s.color;
+        ctx.font = `700 10px ${style.getPropertyValue("--font-mono").trim() || "monospace"}`;
+        ctx.textAlign = "center";
+        ctx.fillText(Math.round(s.rps), x + barW / 2, y - 6);
+
+        // Scenario label
+        ctx.fillStyle = textColor;
+        ctx.font = `600 9px ${style.getPropertyValue("--font-display").trim() || "sans-serif"}`;
+        ctx.save();
+        ctx.translate(x + barW / 2, pad.top + plotH + 10);
+        ctx.rotate(-Math.PI / 6);
+        ctx.textAlign = "right";
+        ctx.fillText(s.label, 0, 0);
+        ctx.restore();
+      });
+    }
+
+    // ── Latency Grouped Bar Chart ──
+    function drawLatencyChart(keys, scenarios) {
+      const canvas = document.getElementById("chart-lat");
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = rect.height;
+
+      const pad = { top: 20, right: 20, bottom: 56, left: 54 };
+      const plotW = W - pad.left - pad.right;
+      const plotH = H - pad.top - pad.bottom;
+
+      const maxLat = Math.max(...keys.map(k => scenarios[k].p99_ms)) * 1.15;
+      const groupW = plotW / keys.length;
+      const subBarW = Math.min(12, groupW * 0.22);
+
+      const style = getComputedStyle(document.documentElement);
+      const textColor = style.getPropertyValue("--color-text-muted").trim() || "#888";
+      const gridColor = style.getPropertyValue("--color-border").trim() || "#eee";
+
+      // Grid
+      ctx.font = `600 10px ${style.getPropertyValue("--font-mono").trim() || "monospace"}`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
+      const gridLines = 5;
+      for (let i = 0; i <= gridLines; i++) {
+        const val = Math.round((maxLat / gridLines) * i);
+        const y = pad.top + plotH - (plotH * (val / maxLat));
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+        ctx.fillStyle = textColor;
+        ctx.fillText(val, pad.left - 8, y);
+      }
+
+      // Metric colors
+      const metrics = [
+        { key: "median_ms", label: "Median", alpha: "ff" },
+        { key: "p95_ms",    label: "P95",    alpha: "99" },
+        { key: "p99_ms",    label: "P99",    alpha: "55" },
+      ];
+
+      keys.forEach((sKey, i) => {
+        const s = scenarios[sKey];
+        const gx = pad.left + i * groupW + groupW / 2;
+
+        metrics.forEach((m, mi) => {
+          const val = s[m.key];
+          const barH = (val / maxLat) * plotH;
+          const y = pad.top + plotH - barH;
+          const x = gx + (mi - 1) * (subBarW + 2) - subBarW / 2;
+
+          ctx.fillStyle = s.color + m.alpha;
+          ctx.beginPath();
+          ctx.roundRect(x, y, subBarW, barH, [2, 2, 0, 0]);
+          ctx.fill();
+        });
+
+        // Label
+        ctx.fillStyle = textColor;
+        ctx.font = `600 9px ${style.getPropertyValue("--font-display").trim() || "sans-serif"}`;
+        ctx.save();
+        ctx.translate(gx, pad.top + plotH + 10);
+        ctx.rotate(-Math.PI / 6);
+        ctx.textAlign = "right";
+        ctx.fillText(s.label, 0, 0);
+        ctx.restore();
+      });
+
+      // Legend — use primary color for the example swatches
+      const primaryColor = style.getPropertyValue("--color-primary").trim() || "#3b82f6";
+      ctx.font = `600 9px ${style.getPropertyValue("--font-display").trim() || "sans-serif"}`;
+      ctx.textAlign = "left";
+      const legendX = W - pad.right - 120;
+      metrics.forEach((m, i) => {
+        const y = pad.top + 4 + i * 16;
+        ctx.fillStyle = primaryColor + m.alpha;
+        ctx.fillRect(legendX, y, 10, 10);
+        ctx.fillStyle = textColor;
+        ctx.fillText(m.label, legendX + 14, y + 8);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

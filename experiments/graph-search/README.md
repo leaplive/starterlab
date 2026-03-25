@@ -3,8 +3,8 @@ name: graph-search
 type: experiment
 display_name: Graph Search
 description: Explore graphs using BFS or DFS — grids, trees, and custom graphs.
-author: "Sampad Mohanty"
-organization: "University of Southern California"
+authors: "Sampad Mohanty"
+organizations: "University of Southern California"
 tags: [algorithms, graphs, BFS, DFS, CS2]
 version: "1.0.0"
 entry_point: dashboard.html

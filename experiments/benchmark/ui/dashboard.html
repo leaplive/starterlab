@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Stress-test LEAP2 — measure RPC throughput and latency across decorator combinations.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <title>Benchmark — LEAP2</title>
+  <script>(function(){var t=localStorage.getItem("leap-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark")})()</script>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme-toggle.js" defer></script>
+  <style>
+    /* ═══════════════════════════════════════
+       Benchmark Dashboard — Instrument Panel
+       ═══════════════════════════════════════ */
+
+    /* ── Entrance animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes barGrow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes metricGlow {
+      0%, 100% { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08); }
+      50% { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.08), 0 0 24px rgba(var(--color-primary-rgb), 0.1); }
+    }
+    @keyframes readyPulse {
+      0%, 100% { box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25); }
+      50% { box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25), 0 0 20px rgba(var(--color-primary-rgb), 0.15); }
+    }
+    @keyframes rowFlash {
+      0% { background: rgba(var(--color-primary-rgb), 0.12); }
+      100% { background: transparent; }
+    }
+
+    /* ── Dot-grid texture ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, color-mix(in srgb, var(--color-text) 4%, transparent) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    main.container { position: relative; z-index: 1; }
+
+    .anim-fade-up {
+      animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ── Card system ── */
+    .b-card {
+      background: color-mix(in srgb, var(--color-surface) 65%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 8px 32px rgba(0,0,0,0.08);
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .b-card:hover {
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.04),
+        0 12px 40px rgba(0,0,0,0.1);
+    }
+    .b-card-title {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .b-card-title::before {
+      content: "";
+      width: 3px;
+      height: 1em;
+      background: var(--color-primary);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Page header ── */
+    .bench-header {
+      margin-bottom: 2rem;
+    }
+    .bench-header h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+    }
+    .bench-subtitle {
+      color: var(--color-text-muted);
+      font-size: 0.9375rem;
+      margin-top: 0.375rem;
+      max-width: 540px;
+      line-height: 1.5;
+    }
+
+    /* ── Auth banner ── */
+    .auth-gate {
+      background: linear-gradient(135deg, var(--color-primary-light), rgba(var(--color-primary-rgb), 0.04));
+      border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.875rem;
+    }
+    .auth-gate-text {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+    .auth-gate-icon {
+      width: 32px; height: 32px;
+      background: rgba(var(--color-primary-rgb), 0.12);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .auth-gate .btn-login {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      font-family: var(--font-display);
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .auth-gate .btn-login:hover { background: var(--color-primary-hover); }
+
+    /* ── Controls panel ── */
+    .controls-panel {
+      margin-bottom: 1.75rem;
+    }
+    .controls-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .ctrl-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    .ctrl-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Segmented control */
+    .seg {
+      display: inline-flex;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 2px;
+      gap: 2px;
+    }
+    .seg-opt {
+      padding: 0.3125rem 0.625rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      background: transparent;
+      border: none;
+      border-radius: calc(var(--radius) - 2px);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      line-height: 1;
+    }
+    .seg-opt:hover {
+      color: var(--color-text);
+      background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+    }
+    .seg-opt.active {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(var(--color-primary-rgb), 0.3);
+    }
+
+    /* Scenario pills */
+    .scenario-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+    .scenario-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.3125rem 0.625rem 0.3125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      user-select: none;
+    }
+    .scenario-pill:hover {
+      border-color: color-mix(in srgb, var(--color-text-muted) 40%, transparent);
+    }
+    .scenario-pill:active {
+      transform: scale(0.96);
+    }
+    .scenario-pill.checked {
+      background: color-mix(in srgb, var(--pill-color) 10%, var(--color-surface));
+      border-color: color-mix(in srgb, var(--pill-color) 35%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--pill-color) 15%, transparent);
+    }
+    .scenario-pill .pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--pill-color);
+      transition: transform 0.2s;
+    }
+    .scenario-pill.checked .pill-dot {
+      transform: scale(1.3);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--pill-color) 50%, transparent);
+    }
+    .scenario-pill .pill-check {
+      width: 14px; height: 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px;
+      transition: all 0.2s;
+      color: transparent;
+    }
+    .scenario-pill.checked .pill-check {
+      background: var(--pill-color);
+      border-color: var(--pill-color);
+      color: #fff;
+    }
+
+    /* Action buttons */
+    .ctrl-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+      margin-left: auto;
+    }
+    .btn-bench {
+      padding: 0.5rem 1.75rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      font-family: var(--font-display);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+    .btn-bench-run {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
+    }
+    .btn-bench-run:not(:disabled) {
+      animation: readyPulse 2.5s ease-in-out infinite;
+    }
+    .btn-bench-run:hover:not(:disabled) {
+      animation: none;
+      background: var(--color-primary-hover);
+      box-shadow: 0 4px 16px rgba(var(--color-primary-rgb), 0.3);
+      transform: translateY(-1px);
+    }
+    .btn-bench-run:active:not(:disabled) { transform: translateY(0); }
+    .btn-bench-run:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; animation: none; }
+
+    .btn-bench-stop {
+      background: transparent;
+      color: var(--color-error, #ef4444);
+      border: 1.5px solid currentColor;
+      padding: 0.4375rem 1.25rem;
+    }
+    .btn-bench-stop:hover:not(:disabled) {
+      background: var(--color-error-bg, rgba(239,68,68,0.06));
+    }
+    .btn-bench-stop:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    /* ── Metric cards ── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    @media (max-width: 640px) {
+      .metrics-row { grid-template-columns: 1fr; }
+    }
+    .metric-card {
+      text-align: center;
+      padding: 1.25rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 15%; right: 15%;
+      height: 2px;
+      border-radius: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .metric-card.active::after { opacity: 0.6; }
+    .metric-card.active {
+      animation: metricGlow 2s ease-in-out infinite;
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.375rem;
+      transition: color 0.3s;
+      letter-spacing: -0.02em;
+    }
+    .metric-value.live {
+      color: var(--color-primary);
+    }
+    .metric-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .metric-sub {
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+      font-family: var(--font-mono);
+      margin-top: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .metric-sub.visible { opacity: 1; }
+
+    /* ── Chart ── */
+    .chart-section { margin-bottom: 1.75rem; }
+    .chart-area {
+      position: relative;
+      margin-top: 0.5rem;
+    }
+    .chart-area canvas {
+      width: 100%;
+      height: 300px;
+      display: block;
+    }
+    .chart-empty {
+      position: absolute;
+      inset: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--color-text-muted);
+      font-size: 0.8125rem;
+      font-style: normal;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      border: 1.5px dashed color-mix(in srgb, var(--color-border) 60%, transparent);
+      border-radius: var(--radius);
+    }
+    .chart-tooltip {
+      position: absolute;
+      top: 0; left: 0;
+      background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.625rem;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      line-height: 1.6;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+    .chart-tooltip.hidden { opacity: 0; }
+    .chart-tooltip-row {
+      display: flex; align-items: center; gap: 0.375rem;
+    }
+    .chart-tooltip-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem 1rem;
+      margin-top: 0.875rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      transition: color 0.2s;
+    }
+    .legend-item.active-legend { color: var(--color-text); font-weight: 600; }
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Progress indicator ── */
+    .progress-track {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+    }
+    .progress-step-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .progress-step {
+      height: 3px;
+      background: var(--color-border);
+      border-radius: 2px;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .progress-step .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .progress-step.done .progress-fill { width: 100%; }
+    .progress-step.active .progress-fill {
+      width: 100%;
+      background: linear-gradient(90deg, transparent 30%, currentColor 50%, transparent 70%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .progress-label {
+      font-size: 0.5625rem;
+      text-align: center;
+      color: var(--color-text-muted);
+      letter-spacing: 0.04em;
+      font-weight: 500;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+    .progress-step-wrap.active .progress-label,
+    .progress-step-wrap.done .progress-label { opacity: 1; }
+
+    /* ── Results table ── */
+    .results-section { margin-bottom: 1.75rem; }
+    .results-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.8125rem;
+    }
+    .results-table th {
+      text-align: left;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+      backdrop-filter: blur(8px);
+    }
+    .results-table th:first-child { padding-left: 1rem; }
+    .results-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 30%, transparent);
+      transition: background 0.2s;
+    }
+    .results-table td:first-child { padding-left: 1rem; }
+    .results-table tr:last-child td { border-bottom: none; }
+    .results-table tbody tr {
+      transition: background 0.15s;
+      animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .results-table tbody tr:hover {
+      background: color-mix(in srgb, var(--color-primary-light) 50%, transparent);
+    }
+    .results-table tbody tr.row-active {
+      background: color-mix(in srgb, var(--color-primary-light) 60%, transparent);
+    }
+    .results-table tbody tr.row-done-flash {
+      animation: rowFlash 0.8s ease-out;
+    }
+    .results-table .mono {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .scenario-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .scenario-cell-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .scenario-cell-name {
+      font-weight: 600;
+      font-size: 0.8125rem;
+    }
+    .scenario-cell-desc {
+      font-size: 0.6875rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+    }
+    .status-idle {
+      color: var(--color-text-muted);
+      background: color-mix(in srgb, var(--color-border) 30%, transparent);
+    }
+    .status-running {
+      color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.1);
+    }
+    .status-done {
+      color: var(--color-success, #2d7a4f);
+      background: rgba(45, 122, 79, 0.08);
+    }
+    html.dark .status-done {
+      color: var(--color-success);
+      background: rgba(110, 231, 160, 0.08);
+    }
+    .status-stopped {
+      color: var(--color-error);
+      background: var(--color-error-bg, rgba(239,68,68,0.06));
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border: 1.5px solid rgba(var(--color-primary-rgb), 0.3);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    /* ── Summary section ── */
+    .summary-section { margin-bottom: 1.75rem; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 720px) {
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Latency comparison bars */
+    .latency-bars { display: flex; flex-direction: column; gap: 0.625rem; }
+    .lat-row {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+    .lat-label {
+      width: 100px;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .lat-bar-track {
+      flex: 1;
+      height: 22px;
+      background: color-mix(in srgb, var(--color-bg) 80%, var(--color-border));
+      border-radius: 11px;
+      overflow: hidden;
+      position: relative;
+    }
+    .lat-bar-fill {
+      height: 100%;
+      border-radius: 11px;
+      transform-origin: left;
+      animation: barGrow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+      min-width: 40px;
+    }
+    .lat-bar-val {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .lat-val-outside {
+      width: 65px;
+      flex-shrink: 0;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Insights panel */
+    .insights-panel {
+      background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+    .insights-title {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .insight-item {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      margin-bottom: 0.25rem;
+      padding: 0.4375rem 0.625rem;
+      border-radius: var(--radius);
+      border-left: 2px solid transparent;
+      color: var(--color-text);
+    }
+    .insight-item:nth-child(odd) {
+      background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+    }
+    .insight-item:last-child { margin-bottom: 0; }
+    .insight-icon {
+      flex-shrink: 0;
+      width: 18px;
+      text-align: center;
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      line-height: 1.55;
+    }
+    .insight-delta {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--color-accent);
+    }
+    .insight-total {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* ── Hidden / responsive ── */
+    .hidden { display: none !important; }
+
+    /* ── Copy button ── */
+    .b-card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .btn-copy {
+      padding: 0.3125rem 0.75rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.375rem;
+    }
+    .btn-copy:hover {
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-text-muted) 40%, transparent);
+    }
+    .btn-copy.copied {
+      color: var(--color-success);
+      border-color: var(--color-success);
+    }
+
+    @media (max-width: 640px) {
+      .controls-inner { flex-direction: column; }
+      .ctrl-actions { margin-left: 0; width: 100%; }
+      .ctrl-actions .btn-bench { flex: 1; justify-content: center; }
+      .metric-value { font-size: 2rem; }
+      .chart-area canvas { height: 220px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .lat-val-outside { display: none; }
+      .progress-label { display: none; }
+    }
+  </style>
+</head>
+<body data-page="benchmark">
+  <a class="skip-to-content" href="#main">Skip to content</a>
+  <script src="/static/navbar.js"></script>
+
+  <main class="container" id="main">
+    <nav class="breadcrumb">
+      <a href="/">Experiments</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>benchmark</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="bench-header anim-fade-up" style="animation-delay: 0.05s">
+      <h1>Benchmark</h1>
+      <p class="bench-subtitle">
+        Measure LEAP2's RPC throughput and latency. Each scenario isolates a different
+        decorator combination to reveal exact per-layer overhead.
+      </p>
+      <p style="font-size:0.75rem;color:var(--color-text-muted);margin-top:0.5rem;max-width:540px;line-height:1.5;opacity:0.8;">
+        Browsers limit concurrent connections to ~6 per origin, capping throughput at ~60 RPS.
+        For true server-side numbers, use the <a href="offline.html" style="color:var(--color-primary);font-weight:600;text-decoration:none;">offline benchmark</a> via pytest.
+      </p>
+      <a class="bench-nav-link" href="offline.html" style="display:inline-flex;align-items:center;gap:0.375rem;margin-top:0.75rem;font-size:0.8125rem;font-weight:600;color:var(--color-primary);text-decoration:none;transition:opacity 0.2s;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1h8.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 10.25 10H7.061l-2.574 2.573A1.458 1.458 0 0 1 2 11.543V10h-.25A1.75 1.75 0 0 1 0 8.25v-5.5C0 1.784.784 1 1.75 1ZM1.5 2.75v5.5c0 .138.112.25.25.25H3a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h3.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13 2a.25.25 0 0 0-.25-.25h-.5a.75.75 0 0 1 0-1.5h.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 14.25 12H14v1.543a1.458 1.458 0 0 1-2.487 1.03L9.22 12.28a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l2.22 2.22V11.25a.75.75 0 0 1 .75-.75h1a.25.25 0 0 0 .25-.25Z"/></svg>
+        View offline benchmark results
+      </a>
+      <hr style="margin-top:1.25rem;height:2px;background:linear-gradient(90deg,var(--color-primary),var(--color-accent),transparent);border:none;border-radius:1px;opacity:0.4;">
+    </div>
+
+    <!-- Auth gate -->
+    <div id="auth-gate" class="auth-gate hidden anim-fade-up" style="animation-delay: 0.1s">
+      <div class="auth-gate-text">
+        <span class="auth-gate-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 0 0-3 3v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1V4a3 3 0 0 0-3-3zm-1.5 3a1.5 1.5 0 1 1 3 0v2h-3V4z"/></svg></span>
+        <span>Admin login required to register benchmark students and run tests.</span>
+      </div>
+      <button class="btn-login" onclick="doLogin()">Log in</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="b-card controls-panel anim-fade-up" style="animation-delay: 0.15s">
+      <div class="controls-inner">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Concurrency</span>
+          <div class="seg" id="seg-concurrency">
+            <button class="seg-opt" data-val="1">1</button>
+            <button class="seg-opt" data-val="5">5</button>
+            <button class="seg-opt active" data-val="10">10</button>
+            <button class="seg-opt" data-val="20">20</button>
+            <button class="seg-opt" data-val="50">50</button>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Duration</span>
+          <div class="seg" id="seg-duration">
+            <button class="seg-opt" data-val="5">5 s</button>
+            <button class="seg-opt active" data-val="10">10 s</button>
+            <button class="seg-opt" data-val="30">30 s</button>
+          </div>
+        </div>
+        <div class="ctrl-group" style="flex: 1; min-width: 220px;">
+          <span class="ctrl-label">Scenarios</span>
+          <div class="scenario-pills" id="scenario-pills"></div>
+        </div>
+        <div class="ctrl-actions">
+          <button class="btn-bench btn-bench-run" id="btn-run" onclick="startBenchmark()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1.5 13,8 3,14.5"/></svg>
+            Run
+          </button>
+          <button class="btn-bench btn-bench-stop" id="btn-stop" onclick="stopBenchmark()" disabled>Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress track -->
+    <div class="progress-track hidden" id="progress-track"></div>
+
+    <!-- Metric cards -->
+    <div class="metrics-row anim-fade-up" style="animation-delay: 0.2s">
+      <div class="b-card metric-card" id="card-rps">
+        <div class="metric-value" id="metric-rps">&mdash;</div>
+        <div class="metric-label">Requests / sec</div>
+        <div class="metric-sub" id="metric-rps-sub">peak: &mdash;</div>
+      </div>
+      <div class="b-card metric-card" id="card-total">
+        <div class="metric-value" id="metric-total">&mdash;</div>
+        <div class="metric-label">Total Requests</div>
+        <div class="metric-sub" id="metric-total-sub">across 0 scenarios</div>
+      </div>
+      <div class="b-card metric-card" id="card-errors">
+        <div class="metric-value" id="metric-errors">&mdash;</div>
+        <div class="metric-label">Error Rate</div>
+        <div class="metric-sub" id="metric-errors-sub">0 errors</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="b-card chart-section anim-fade-up" style="animation-delay: 0.25s">
+      <div class="b-card-title">Throughput Over Time</div>
+      <div class="chart-area">
+        <canvas id="rps-chart"></canvas>
+        <div class="chart-empty" id="chart-empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span style="font-weight:500">Run a benchmark to see throughput data</span>
+          <span style="font-size:0.6875rem;opacity:0.7">Select scenarios above, then press Run</span>
+        </div>
+        <div class="chart-tooltip hidden" id="chart-tooltip"></div>
+      </div>
+      <div class="chart-legend" id="chart-legend"></div>
+    </div>
+
+    <!-- Results table -->
+    <div class="b-card results-section anim-fade-up" style="animation-delay: 0.3s">
+      <div class="b-card-title">Per-Scenario Results</div>
+      <div style="overflow-x: auto; margin: 0 -1.5rem; padding: 0 1.5rem;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th style="min-width:180px">Scenario</th>
+              <th>Requests</th>
+              <th>RPS</th>
+              <th>Median</th>
+              <th>P95</th>
+              <th>P99</th>
+              <th>Errors</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary (hidden until benchmark completes) -->
+    <div class="b-card summary-section hidden" id="summary-card">
+      <div class="b-card-title-row">
+        <div class="b-card-title" style="margin-bottom:0">Summary</div>
+        <button class="btn-copy" id="btn-copy" onclick="copyResults()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25ZM5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+          Copy
+        </button>
+      </div>
+      <div class="summary-grid">
+        <div>
+          <div class="insights-title" style="margin-bottom: 0.625rem;">Median Latency Comparison</div>
+          <div class="latency-bars" id="summary-bars"></div>
+        </div>
+        <div class="insights-panel" id="insights-panel">
+          <div class="insights-title">Key Findings</div>
+          <div id="insights"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/static/footer.js"></script>
+  <script>
+    /* ═══════════════════════════════════════
+       Benchmark Engine
+       ═══════════════════════════════════════ */
+
+    const SCENARIOS = [
+      { key: "noop_minimal",      label: "Minimal",       color: "#3b82f6", desc: "no log \u00b7 no reg \u00b7 no limit" },
+      { key: "noop_regcheck",     label: "Reg Check",     color: "#06b6d4", desc: "DB registration lookup" },
+      { key: "noop_logged",       label: "Logged",        color: "#f59e0b", desc: "DuckDB INSERT per call" },
+      { key: "noop_rate_limited", label: "Rate Limited",  color: "#ef4444", desc: "120/min rate limit" },
+      { key: "noop_full",         label: "Full Pipeline", color: "#8b5cf6", desc: "reg + limit + logging" },
+      { key: "noop_adminonly",    label: "Admin Only",    color: "#10b981", desc: "admin session check" },
+    ];
+
+    const EXP = "benchmark";
+    const CALL_URL = `/exp/${EXP}/call`;
+    const STUDENT_ID = "bench-001";
+    const TICK_MS = 400;
+
+    let isAdmin = false;
+    let concurrency = 10;
+    let duration = 10;
+    let running = false;
+    let stopFlag = false;
+    let peakRPS = 0;
+
+    let scenarioResults = {};
+    let chartData = {};
+    let activeScenarioIdx = -1;
+
+    // ── Segmented controls ──
+    function initSeg(id, onChange) {
+      const el = document.getElementById(id);
+      el.querySelectorAll(".seg-opt").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (running) return;
+          el.querySelector(".active")?.classList.remove("active");
+          btn.classList.add("active");
+          onChange(Number(btn.dataset.val));
+        });
+      });
+    }
+    initSeg("seg-concurrency", v => concurrency = v);
+    initSeg("seg-duration", v => duration = v);
+
+    // ── Scenario pills ──
+    const pillsEl = document.getElementById("scenario-pills");
+    const pillState = {};
+    SCENARIOS.forEach(s => {
+      pillState[s.key] = true;
+      const pill = document.createElement("div");
+      pill.className = "scenario-pill checked";
+      pill.style.setProperty("--pill-color", s.color);
+      pill.dataset.key = s.key;
+      pill.innerHTML = `<span class="pill-dot"></span><span class="pill-check">\u2713</span><span>${s.label}</span>`;
+      pill.addEventListener("click", () => {
+        if (running) return;
+        pillState[s.key] = !pillState[s.key];
+        pill.classList.toggle("checked", pillState[s.key]);
+      });
+      pillsEl.appendChild(pill);
+    });
+
+    function getSelectedScenarios() {
+      return SCENARIOS.filter(s => pillState[s.key]);
+    }
+
+    // ── Chart legend ──
+    const legendEl = document.getElementById("chart-legend");
+    SCENARIOS.forEach(s => {
+      const item = document.createElement("span");
+      item.className = "legend-item";
+      item.id = `legend-${s.key}`;
+      item.innerHTML = `<span class="legend-dot" style="background:${s.color}"></span>${s.label}`;
+      legendEl.appendChild(item);
+    });
+
+    // ── Results table ──
+    function initTable(selected) {
+      const tbody = document.getElementById("results-body");
+      tbody.innerHTML = "";
+      selected.forEach((s, i) => {
+        const tr = document.createElement("tr");
+        tr.id = `row-${s.key}`;
+        tr.style.animationDelay = `${i * 0.06}s`;
+        tr.innerHTML = `
+          <td>
+            <div class="scenario-cell">
+              <span class="scenario-cell-dot" style="background:${s.color}"></span>
+              <div>
+                <div class="scenario-cell-name">${s.label}</div>
+                <div class="scenario-cell-desc">${s.desc}</div>
+              </div>
+            </div>
+          </td>
+          <td class="mono" data-col="reqs">&mdash;</td>
+          <td class="mono" data-col="rps">&mdash;</td>
+          <td class="mono" data-col="med">&mdash;</td>
+          <td class="mono" data-col="p95">&mdash;</td>
+          <td class="mono" data-col="p99">&mdash;</td>
+          <td class="mono" data-col="errs">&mdash;</td>
+          <td data-col="status"><span class="status-badge status-idle">Idle</span></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── Progress track ──
+    function initProgress(selected) {
+      const el = document.getElementById("progress-track");
+      el.innerHTML = "";
+      selected.forEach(s => {
+        const wrap = document.createElement("div");
+        wrap.className = "progress-step-wrap";
+        wrap.id = `progwrap-${s.key}`;
+        wrap.innerHTML = `
+          <div class="progress-step" id="prog-${s.key}">
+            <div class="progress-fill" style="color:${s.color};background:${s.color}"></div>
+          </div>
+          <span class="progress-label">${s.label}</span>`;
+        el.appendChild(wrap);
+      });
+      el.classList.remove("hidden");
+    }
+
+    // ── Helpers ──
+    function percentile(sorted, p) {
+      if (!sorted.length) return 0;
+      const idx = Math.ceil(p / 100 * sorted.length) - 1;
+      return sorted[Math.max(0, idx)];
+    }
+    function fmtMs(ms) { return ms < 1 ? ms.toFixed(2) : ms < 10 ? ms.toFixed(1) : Math.round(ms); }
+    function fmtNum(n) { return n.toLocaleString(); }
+    function latColor(ms) {
+      if (ms < 5) return 'var(--color-success)';
+      if (ms < 20) return 'var(--color-accent)';
+      return 'var(--color-error)';
+    }
+
+    // ── Smooth curve helper ──
+    function drawSmoothLine(c, pts, xFn, yFn) {
+      if (pts.length < 2) { c.moveTo(xFn(pts[0]), yFn(pts[0])); return; }
+      c.moveTo(xFn(pts[0]), yFn(pts[0]));
+      for (let i = 0; i < pts.length - 1; i++) {
+        const x0 = xFn(pts[i]), y0 = yFn(pts[i]);
+        const x1 = xFn(pts[i+1]), y1 = yFn(pts[i+1]);
+        const cpx = (x0 + x1) / 2;
+        c.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+      }
+    }
+
+    // ── Canvas chart ──
+    const canvas = document.getElementById("rps-chart");
+    const ctx2d = canvas.getContext("2d");
+    let hoverX = null; // for crosshair tooltip
+
+    function drawChart() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx2d.scale(dpr, dpr);
+      const W = rect.width, H = rect.height;
+      const PAD = { top: 24, right: 16, bottom: 32, left: 52 };
+      const pW = W - PAD.left - PAD.right;
+      const pH = H - PAD.top - PAD.bottom;
+
+      const isDark = document.documentElement.classList.contains("dark");
+      const grid = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
+      const axis = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
+      const txt  = isDark ? "#9c9590" : "#78716c";
+      const font = "10px system-ui, sans-serif";
+
+      // Domain
+      let maxT = duration, maxRPS = 50;
+      for (const key in chartData) {
+        for (const pt of chartData[key]) {
+          if (pt.t > maxT) maxT = pt.t;
+          if (pt.rps > maxRPS) maxRPS = pt.rps;
+        }
+      }
+      maxRPS = Math.ceil(maxRPS * 1.12 / 50) * 50 || 50;
+
+      ctx2d.clearRect(0, 0, W, H);
+
+      // Horizontal grid
+      const yN = 5;
+      for (let i = 0; i <= yN; i++) {
+        const y = PAD.top + pH - (i / yN) * pH;
+        ctx2d.strokeStyle = i === 0 ? axis : grid;
+        ctx2d.lineWidth = i === 0 ? 1 : 0.5;
+        ctx2d.beginPath();
+        ctx2d.moveTo(PAD.left, y);
+        ctx2d.lineTo(PAD.left + pW, y);
+        ctx2d.stroke();
+        if (i > 0) {
+          ctx2d.fillStyle = txt; ctx2d.font = font;
+          ctx2d.textAlign = "right"; ctx2d.textBaseline = "middle";
+          ctx2d.fillText(Math.round(maxRPS * i / yN), PAD.left - 8, y);
+        }
+      }
+
+      // Vertical grid
+      const xN = Math.min(Math.ceil(maxT / 5), 6) || 1;
+      for (let i = 0; i <= xN; i++) {
+        const x = PAD.left + (i / xN) * pW;
+        if (i > 0) {
+          ctx2d.strokeStyle = grid; ctx2d.lineWidth = 0.5;
+          ctx2d.beginPath(); ctx2d.moveTo(x, PAD.top); ctx2d.lineTo(x, PAD.top + pH); ctx2d.stroke();
+        }
+        ctx2d.fillStyle = txt; ctx2d.font = font;
+        ctx2d.textAlign = "center"; ctx2d.textBaseline = "top";
+        ctx2d.fillText(Math.round(maxT * i / xN) + "s", x, PAD.top + pH + 10);
+      }
+
+      // Y-axis label
+      ctx2d.save();
+      ctx2d.fillStyle = txt; ctx2d.font = font; ctx2d.textAlign = "center";
+      ctx2d.translate(12, PAD.top + pH / 2);
+      ctx2d.rotate(-Math.PI / 2);
+      ctx2d.fillText("req/s", 0, 0);
+      ctx2d.restore();
+
+      // Coordinate helpers
+      const xOf = pt => PAD.left + (pt.t / maxT) * pW;
+      const yOf = pt => PAD.top + pH - (pt.rps / maxRPS) * pH;
+
+      // Plot lines with gradient fill (smooth curves)
+      for (const key in chartData) {
+        const pts = chartData[key];
+        if (pts.length < 2) continue;
+        const sc = SCENARIOS.find(s => s.key === key);
+        if (!sc) continue;
+
+        // Gradient fill
+        const grad = ctx2d.createLinearGradient(0, PAD.top, 0, PAD.top + pH);
+        grad.addColorStop(0, sc.color + "18");
+        grad.addColorStop(1, sc.color + "02");
+
+        ctx2d.beginPath();
+        drawSmoothLine(ctx2d, pts, xOf, yOf);
+        // Close for fill
+        ctx2d.lineTo(xOf(pts[pts.length - 1]), PAD.top + pH);
+        ctx2d.lineTo(xOf(pts[0]), PAD.top + pH);
+        ctx2d.closePath();
+        ctx2d.fillStyle = grad;
+        ctx2d.fill();
+
+        // Line
+        ctx2d.beginPath();
+        drawSmoothLine(ctx2d, pts, xOf, yOf);
+        ctx2d.strokeStyle = sc.color;
+        ctx2d.lineWidth = 2;
+        ctx2d.lineJoin = "round";
+        ctx2d.lineCap = "round";
+        ctx2d.stroke();
+
+        // End dot
+        const lp = pts[pts.length - 1];
+        ctx2d.beginPath();
+        ctx2d.arc(xOf(lp), yOf(lp), 3, 0, Math.PI * 2);
+        ctx2d.fillStyle = sc.color;
+        ctx2d.fill();
+      }
+
+      // Crosshair on hover
+      if (hoverX !== null && Object.keys(chartData).length > 0) {
+        const hTime = ((hoverX - PAD.left) / pW) * maxT;
+        if (hTime >= 0 && hTime <= maxT) {
+          // Vertical line
+          ctx2d.save();
+          ctx2d.strokeStyle = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
+          ctx2d.lineWidth = 1;
+          ctx2d.setLineDash([4, 4]);
+          ctx2d.beginPath();
+          ctx2d.moveTo(hoverX, PAD.top);
+          ctx2d.lineTo(hoverX, PAD.top + pH);
+          ctx2d.stroke();
+          ctx2d.restore();
+
+          // Highlight dots
+          for (const key in chartData) {
+            const pts = chartData[key];
+            if (!pts.length) continue;
+            const sc = SCENARIOS.find(s => s.key === key);
+            if (!sc) continue;
+            // Find nearest point
+            let nearest = pts[0];
+            for (const pt of pts) {
+              if (Math.abs(pt.t - hTime) < Math.abs(nearest.t - hTime)) nearest = pt;
+            }
+            const nx = xOf(nearest), ny = yOf(nearest);
+            ctx2d.beginPath();
+            ctx2d.arc(nx, ny, 5, 0, Math.PI * 2);
+            ctx2d.fillStyle = sc.color;
+            ctx2d.fill();
+            ctx2d.strokeStyle = isDark ? "#1a1e28" : "#faf8f5";
+            ctx2d.lineWidth = 2;
+            ctx2d.stroke();
+          }
+        }
+      }
+    }
+
+    // ── Chart tooltip ──
+    const tooltipEl = document.getElementById("chart-tooltip");
+    canvas.addEventListener("mousemove", e => {
+      if (!Object.keys(chartData).length) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const mx = e.clientX - rect.left;
+      hoverX = mx;
+      drawChart();
+
+      // Build tooltip content
+      const PAD = { top: 24, right: 16, bottom: 32, left: 52 };
+      const pW = rect.width - PAD.left - PAD.right;
+      let maxT = duration;
+      for (const key in chartData) for (const pt of chartData[key]) if (pt.t > maxT) maxT = pt.t;
+      const hTime = ((mx - PAD.left) / pW) * maxT;
+      if (hTime < 0 || hTime > maxT) { tooltipEl.classList.add("hidden"); return; }
+
+      let html = `<div style="color:var(--color-text-muted);margin-bottom:2px">${hTime.toFixed(1)}s</div>`;
+      for (const key in chartData) {
+        const pts = chartData[key];
+        if (!pts.length) continue;
+        const sc = SCENARIOS.find(s => s.key === key);
+        if (!sc) continue;
+        let nearest = pts[0];
+        for (const pt of pts) if (Math.abs(pt.t - hTime) < Math.abs(nearest.t - hTime)) nearest = pt;
+        html += `<div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:${sc.color}"></span>${sc.label}: <strong>${Math.round(nearest.rps)}</strong> rps</div>`;
+      }
+      tooltipEl.innerHTML = html;
+      tooltipEl.classList.remove("hidden");
+
+      // Position tooltip
+      let tx = e.clientX - rect.left + 12;
+      let ty = e.clientY - rect.top - 10;
+      if (tx + tooltipEl.offsetWidth > rect.width - 8) tx = mx - tooltipEl.offsetWidth - 12;
+      if (ty < 0) ty = 4;
+      tooltipEl.style.left = tx + "px";
+      tooltipEl.style.top = ty + "px";
+    });
+    canvas.addEventListener("mouseleave", () => {
+      hoverX = null;
+      tooltipEl.classList.add("hidden");
+      drawChart();
+    });
+
+    // ── Auth ──
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth-status", { credentials: "same-origin" });
+        const d = await res.json();
+        isAdmin = d.admin === true;
+      } catch { isAdmin = false; }
+      document.getElementById("auth-gate").classList.toggle("hidden", isAdmin);
+      document.getElementById("btn-run").disabled = !isAdmin;
+    }
+
+    function doLogin() {
+      if (window.LEAP && window.LEAP.showLogin) {
+        window.LEAP.showLogin(() => checkAuth());
+      }
+    }
+
+    // ── Register student ──
+    async function ensureStudent() {
+      try {
+        await fetch(`/exp/${EXP}/admin/add-student`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ student_id: STUDENT_ID, name: "Benchmark Bot" }),
+        });
+      } catch { /* already exists */ }
+    }
+
+    // ── Benchmark runner ──
+    async function runScenario(scenario, conc, durationMs, onTick) {
+      const results = { latencies: [], timestamps: [], errors: 0, startTime: performance.now() };
+      const deadline = performance.now() + durationMs;
+      const isAdminOnly = scenario.key === "noop_adminonly";
+      const payload = JSON.stringify({ student_id: STUDENT_ID, func_name: scenario.key, args: [], kwargs: {} });
+      const hdrs = { "Content-Type": "application/json" };
+      const opts = { method: "POST", headers: hdrs };
+      if (isAdminOnly) opts.credentials = "same-origin";
+
+      const tickIv = setInterval(() => onTick(scenario.key, results), TICK_MS);
+
+      async function worker() {
+        while (!stopFlag && performance.now() < deadline) {
+          const t0 = performance.now();
+          try {
+            const res = await fetch(CALL_URL, { ...opts, body: payload });
+            const lat = performance.now() - t0;
+            results.latencies.push(lat);
+            results.timestamps.push(performance.now());
+            if (!res.ok) results.errors++;
+          } catch {
+            results.latencies.push(performance.now() - t0);
+            results.timestamps.push(performance.now());
+            results.errors++;
+          }
+        }
+      }
+
+      await Promise.all(Array.from({ length: conc }, () => worker()));
+      clearInterval(tickIv);
+      onTick(scenario.key, results);
+      return results;
+    }
+
+    function windowedRPS(results, windowMs) {
+      if (!results.timestamps.length) return 0;
+      const now = performance.now();
+      const cutoff = now - windowMs;
+      let count = 0;
+      for (let i = results.timestamps.length - 1; i >= 0; i--) {
+        if (results.timestamps[i] >= cutoff) count++;
+        else break;
+      }
+      return count / (windowMs / 1000);
+    }
+
+    function updateRow(key, results, status) {
+      const row = document.getElementById(`row-${key}`);
+      if (!row) return;
+      const elapsed = (performance.now() - results.startTime) / 1000;
+      const total = results.latencies.length;
+      const rps = elapsed > 0 ? total / elapsed : 0;
+      const sorted = [...results.latencies].sort((a, b) => a - b);
+
+      row.querySelector('[data-col="reqs"]').textContent = fmtNum(total);
+      row.querySelector('[data-col="rps"]').textContent = Math.round(rps);
+
+      const medVal = total ? percentile(sorted, 50) : null;
+      const p95Val = total ? percentile(sorted, 95) : null;
+      const p99Val = total ? percentile(sorted, 99) : null;
+      const medCell = row.querySelector('[data-col="med"]');
+      const p95Cell = row.querySelector('[data-col="p95"]');
+      const p99Cell = row.querySelector('[data-col="p99"]');
+      medCell.textContent = medVal !== null ? fmtMs(medVal) + " ms" : "\u2014";
+      p95Cell.textContent = p95Val !== null ? fmtMs(p95Val) + " ms" : "\u2014";
+      p99Cell.textContent = p99Val !== null ? fmtMs(p99Val) + " ms" : "\u2014";
+      if (medVal !== null) medCell.style.color = latColor(medVal);
+      if (p95Val !== null) p95Cell.style.color = latColor(p95Val);
+      if (p99Val !== null) p99Cell.style.color = latColor(p99Val);
+
+      const errCell = row.querySelector('[data-col="errs"]');
+      const rateLimitedScenarios = ["noop_rate_limited", "noop_full"];
+      if (results.errors > 0 && rateLimitedScenarios.includes(key)) {
+        errCell.innerHTML = `${fmtNum(results.errors)} <span title="Expected \u2014 rate limit is 120/min. Requests past the limit return HTTP 429." style="cursor:help;opacity:0.6;font-size:0.75em">\u24d8</span>`;
+      } else {
+        errCell.textContent = results.errors || "0";
+      }
+      errCell.style.color = results.errors > 0 ? "var(--color-error)" : "";
+
+      const st = row.querySelector('[data-col="status"]');
+      if (status === "running") {
+        st.innerHTML = '<span class="status-badge status-running"><span class="spinner"></span> Running</span>';
+        row.classList.add("row-active");
+      } else if (status === "done") {
+        st.innerHTML = '<span class="status-badge status-done">\u2713 Done</span>';
+        row.classList.remove("row-active");
+        row.classList.add("row-done-flash");
+      } else if (status === "stopped") {
+        st.innerHTML = '<span class="status-badge status-stopped">Stopped</span>';
+        row.classList.remove("row-active");
+      }
+    }
+
+    function updateAggregates(completedCount) {
+      let totalReqs = 0, totalErrors = 0, currentRPS = 0;
+      for (const key in scenarioResults) {
+        const r = scenarioResults[key];
+        totalReqs += r.latencies.length;
+        totalErrors += r.errors;
+        currentRPS += windowedRPS(r, 2000);
+      }
+
+      const rpsEl = document.getElementById("metric-rps");
+      const rpsVal = Math.round(currentRPS);
+      rpsEl.textContent = rpsVal || "\u2014";
+      rpsEl.classList.toggle("live", rpsVal > 0 && running);
+      if (rpsVal > peakRPS) peakRPS = rpsVal;
+      document.getElementById("metric-rps-sub").textContent = `peak: ${peakRPS}`;
+      document.getElementById("metric-rps-sub").classList.toggle("visible", peakRPS > 0);
+
+      document.getElementById("metric-total").textContent = totalReqs ? fmtNum(totalReqs) : "\u2014";
+      document.getElementById("metric-total-sub").textContent = `across ${completedCount} scenario${completedCount !== 1 ? "s" : ""}`;
+      document.getElementById("metric-total-sub").classList.toggle("visible", totalReqs > 0);
+
+      const errPct = totalReqs > 0 ? ((totalErrors / totalReqs) * 100).toFixed(1) + "%" : "\u2014";
+      document.getElementById("metric-errors").textContent = errPct;
+      document.getElementById("metric-errors-sub").textContent = `${fmtNum(totalErrors)} error${totalErrors !== 1 ? "s" : ""}`;
+      document.getElementById("metric-errors-sub").classList.toggle("visible", totalReqs > 0);
+
+      document.querySelectorAll(".metric-card").forEach(c => c.classList.toggle("active", running));
+    }
+
+    function onTick(key, results) {
+      scenarioResults[key] = results;
+      updateRow(key, results, "running");
+      updateAggregates(activeScenarioIdx + 1);
+
+      // Windowed RPS for chart (2s window)
+      const elapsed = (performance.now() - results.startTime) / 1000;
+      const rps = windowedRPS(results, 2000);
+      if (!chartData[key]) chartData[key] = [];
+      chartData[key].push({ t: elapsed, rps });
+
+      document.getElementById("chart-empty").style.opacity = "0";
+      drawChart();
+
+      // Update legend
+      document.querySelectorAll(".legend-item").forEach(el => el.classList.remove("active-legend"));
+      const leg = document.getElementById(`legend-${key}`);
+      if (leg) leg.classList.add("active-legend");
+    }
+
+    async function startBenchmark() {
+      const selected = getSelectedScenarios();
+      if (!selected.length) return;
+
+      running = true;
+      stopFlag = false;
+      peakRPS = 0;
+      scenarioResults = {};
+      chartData = {};
+      activeScenarioIdx = -1;
+
+      document.getElementById("btn-run").disabled = true;
+      document.getElementById("btn-stop").disabled = false;
+      document.getElementById("summary-card").classList.add("hidden");
+      document.getElementById("chart-empty").style.opacity = "1";
+      document.querySelectorAll(".seg-opt").forEach(b => b.style.pointerEvents = "none");
+
+      updateAggregates(0);
+      initTable(selected);
+      initProgress(selected);
+      drawChart();
+
+      await ensureStudent();
+
+      const durationMs = duration * 1000;
+
+      for (let i = 0; i < selected.length; i++) {
+        if (stopFlag) break;
+        const scenario = selected[i];
+        activeScenarioIdx = i;
+
+        // Update progress
+        const progWrap = document.getElementById(`progwrap-${scenario.key}`);
+        const progStep = document.getElementById(`prog-${scenario.key}`);
+        if (progStep) progStep.classList.add("active");
+        if (progWrap) progWrap.classList.add("active");
+        updateRow(scenario.key, { latencies: [], timestamps: [], errors: 0, startTime: performance.now() }, "running");
+
+        const results = await runScenario(scenario, concurrency, durationMs, onTick);
+        scenarioResults[scenario.key] = results;
+        updateRow(scenario.key, results, stopFlag ? "stopped" : "done");
+
+        if (progStep) { progStep.classList.remove("active"); progStep.classList.add("done"); }
+        if (progWrap) { progWrap.classList.remove("active"); progWrap.classList.add("done"); }
+      }
+
+      running = false;
+      activeScenarioIdx = -1;
+      document.getElementById("btn-run").disabled = !isAdmin;
+      document.getElementById("btn-stop").disabled = true;
+      document.querySelectorAll(".seg-opt").forEach(b => b.style.pointerEvents = "");
+      document.querySelectorAll(".legend-item").forEach(el => el.classList.remove("active-legend"));
+      document.querySelectorAll(".metric-card").forEach(c => c.classList.remove("active"));
+      document.getElementById("metric-rps").classList.remove("live");
+      updateAggregates(selected.length);
+
+      if (!stopFlag && Object.keys(scenarioResults).length > 0) showSummary(selected);
+    }
+
+    function stopBenchmark() {
+      stopFlag = true;
+      document.getElementById("btn-stop").disabled = true;
+    }
+
+    // ── Summary ──
+    function showSummary(selected) {
+      const card = document.getElementById("summary-card");
+      const barsEl = document.getElementById("summary-bars");
+      const insightsEl = document.getElementById("insights");
+
+      const medians = {};
+      const rpsVals = {};
+      let maxMedian = 0;
+      selected.forEach(s => {
+        const r = scenarioResults[s.key];
+        if (!r || !r.latencies.length) return;
+        const sorted = [...r.latencies].sort((a, b) => a - b);
+        medians[s.key] = percentile(sorted, 50);
+        const elapsed = (performance.now() - r.startTime) / 1000;
+        rpsVals[s.key] = elapsed > 0 ? r.latencies.length / elapsed : 0;
+        if (medians[s.key] > maxMedian) maxMedian = medians[s.key];
+      });
+
+      // Latency bars
+      barsEl.innerHTML = "";
+      selected.forEach((s, i) => {
+        if (medians[s.key] === undefined) return;
+        const pct = maxMedian > 0 ? Math.max((medians[s.key] / maxMedian) * 100, 3) : 0;
+        const row = document.createElement("div");
+        row.className = "lat-row";
+        row.style.animationDelay = `${i * 0.08}s`;
+        row.innerHTML = `
+          <div class="lat-label"><span class="scenario-cell-dot" style="background:${s.color}"></span>${s.label}</div>
+          <div class="lat-bar-track">
+            <div class="lat-bar-fill" style="width:${pct}%;background:${s.color};animation-delay:${i * 0.1}s">
+              <span class="lat-bar-val">${fmtMs(medians[s.key])}</span>
+            </div>
+          </div>
+          <div class="lat-val-outside">${fmtMs(medians[s.key])} ms</div>`;
+        barsEl.appendChild(row);
+      });
+
+      // Insights
+      insightsEl.innerHTML = "";
+      const base = medians.noop_minimal;
+
+      function addInsight(icon, html) {
+        const d = document.createElement("div");
+        d.className = "insight-item";
+        d.innerHTML = `<span class="insight-icon">${icon}</span><span>${html}</span>`;
+        insightsEl.appendChild(d);
+      }
+
+      if (base !== undefined) {
+        const compare = (key, label) => {
+          if (medians[key] === undefined || key === "noop_minimal") return;
+          const diff = medians[key] - base;
+          if (diff > 0.1) {
+            addInsight("\u0394", `<strong>${label}</strong> adds <span class="insight-delta">+${fmtMs(diff)} ms</span> per call over baseline.`);
+          } else {
+            addInsight("\u2248", `<strong>${label}</strong> is within baseline (\u00b1${fmtMs(Math.abs(diff))} ms).`);
+          }
+        };
+        compare("noop_regcheck", "Registration check");
+        compare("noop_logged", "DuckDB logging");
+        compare("noop_rate_limited", "Rate limiting");
+        compare("noop_full", "Full pipeline");
+        compare("noop_adminonly", "Admin auth");
+      }
+
+      const totalReqs = Object.values(scenarioResults).reduce((s, r) => s + r.latencies.length, 0);
+      if (totalReqs > 0) {
+        addInsight("\u03A3", `<span class="insight-total">${fmtNum(totalReqs)}</span> total requests across ${selected.length} scenarios in ${selected.length * duration}s.`);
+      }
+      if (peakRPS > 0) {
+        addInsight("\u26A1", `Peak throughput: <span class="insight-total">${fmtNum(peakRPS)}</span> req/s.`);
+      }
+
+      card.classList.remove("hidden");
+      card.style.animation = "fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both";
+    }
+
+    // ── Copy results ──
+    function copyResults() {
+      const header = "Scenario\tRequests\tRPS\tMedian ms\tP95 ms\tP99 ms\tErrors";
+      const rows = [];
+      for (const key in scenarioResults) {
+        const r = scenarioResults[key];
+        const sc = SCENARIOS.find(s => s.key === key);
+        if (!sc || !r.latencies.length) continue;
+        const elapsed = (performance.now() - r.startTime) / 1000;
+        const sorted = [...r.latencies].sort((a, b) => a - b);
+        rows.push([
+          sc.label,
+          r.latencies.length,
+          Math.round(elapsed > 0 ? r.latencies.length / elapsed : 0),
+          fmtMs(percentile(sorted, 50)),
+          fmtMs(percentile(sorted, 95)),
+          fmtMs(percentile(sorted, 99)),
+          r.errors
+        ].join("\t"));
+      }
+      const tsv = header + "\n" + rows.join("\n");
+      navigator.clipboard.writeText(tsv).then(() => {
+        const btn = document.getElementById("btn-copy");
+        btn.classList.add("copied");
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove("copied");
+          btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25ZM5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg> Copy`;
+        }, 2000);
+      });
+    }
+
+    // ── Init ──
+    checkAuth();
+    initTable(SCENARIOS);
+    drawChart();
+  </script>
+</body>
+</html>

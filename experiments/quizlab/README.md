@@ -3,8 +3,8 @@ name: quizlab
 type: experiment
 display_name: Quiz Lab
 description: Author quizzes in markdown with LaTeX, code blocks, and multiple question types. Server-side grading keeps answers secure.
-author: "Sampad Mohanty"
-organization: "University of Southern California"
+authors: "Sampad Mohanty"
+organizations: "University of Southern California"
 tags: [quiz, assessment, grading, markdown]
 version: "1.0.0"
 entry_point: quiz.html

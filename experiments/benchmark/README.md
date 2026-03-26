@@ -82,6 +82,8 @@ The default rate limit is 120 calls/minute per student per function. At any conc
 
 DuckDB uses a process-level write lock. Within a single process, multiple threads can read concurrently, but writes are serialized. The `noop_logged` vs `noop_minimal` comparison shows this cost — each logged call does a synchronous `INSERT` + `COMMIT` to DuckDB. Use `@nolog` on high-frequency functions to avoid this overhead.
 
+**Configuration:** LEAP2 sets `preserve_insertion_order = false` on the DuckDB engine to reduce write overhead. This disables internal bookkeeping that tracks row insertion order — unnecessary since network requests arrive in nondeterministic order and all queries use explicit `ORDER BY`. See `plans/duckdb-performance-improvements.md` in the LEAP2 repo for additional optimization strategies.
+
 ### Server tuning
 
 LEAP2 uses uvloop (faster event loop) and httptools (faster HTTP parser) by default. Access logs are disabled for throughput — run `leap run -v` to re-enable them for debugging.

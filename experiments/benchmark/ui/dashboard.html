@@ -936,7 +936,7 @@
     const SCENARIOS = [
       { key: "noop_minimal",      label: "Minimal",       color: "#3b82f6", desc: "no log \u00b7 no reg \u00b7 no limit" },
       { key: "noop_regcheck",     label: "Reg Check",     color: "#06b6d4", desc: "DB registration lookup" },
-      { key: "noop_logged",       label: "Logged",        color: "#f59e0b", desc: "DuckDB INSERT per call" },
+      { key: "noop_logged",       label: "Logged",        color: "#f59e0b", desc: "DuckDB INSERT per call (insertion order tracking disabled)" },
       { key: "noop_rate_limited", label: "Rate Limited",  color: "#ef4444", desc: "120/min rate limit" },
       { key: "noop_full",         label: "Full Pipeline", color: "#8b5cf6", desc: "reg + limit + logging" },
       { key: "noop_adminonly",    label: "Admin Only",    color: "#10b981", desc: "admin session check" },

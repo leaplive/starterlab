@@ -378,9 +378,33 @@ a { color: var(--accent); text-decoration: none; }
   transition: opacity 0.3s;
   pointer-events: none;
 }
+
+/* — Touch theme toggle (slide 1 only) — */
+.theme-toggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 99999;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s;
+}
+.theme-toggle.visible { display: flex; }
 </style>
 </head>
 <body>
+<button class="theme-toggle" id="theme-toggle">☾</button>
 <textarea id="source" style="display:none">
 
 class: title-slide, middle
@@ -713,7 +737,15 @@ function syncIframePolling() {
   }
 }
 
+var _themeBtn = document.getElementById('theme-toggle');
+function updateThemeBtn() {
+  var onFirst = slideshow.getCurrentSlideIndex() === 0;
+  _themeBtn.classList.toggle('visible', onFirst);
+  _themeBtn.textContent = document.documentElement.getAttribute('data-theme') === 'light' ? '☀' : '☾';
+}
+
 slideshow.on('afterShowSlide', function() {
+  updateThemeBtn();
   renderMathInElement(document.body, {
     delimiters: [
       { left: '$$', right: '$$', display: true },
@@ -758,6 +790,22 @@ slideshow.on('afterShowSlide', function() {
     }
   }
 
+  function toggleTheme() {
+    var isLight = root.getAttribute('data-theme') === 'light';
+    var next = isLight ? 'dark' : 'light';
+    if (next === 'dark') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', next);
+    localStorage.setItem('slide-theme', next);
+    flash(next === 'light' ? '☀ light' : '☾ dark');
+    broadcastTheme(next);
+    updateThemeBtn();
+  }
+
+  _themeBtn.addEventListener('click', toggleTheme);
+
+  // Show button on first slide initially
+  updateThemeBtn();
+
   // Sync theme to iframes once they load
   var _themeIframes = document.querySelectorAll('iframe');
   for (var _ti = 0; _ti < _themeIframes.length; _ti++) {
@@ -789,13 +837,7 @@ slideshow.on('afterShowSlide', function() {
       }
     }
     if (e.key === 't' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      var isLight = root.getAttribute('data-theme') === 'light';
-      var next = isLight ? 'dark' : 'light';
-      if (next === 'dark') root.removeAttribute('data-theme');
-      else root.setAttribute('data-theme', next);
-      localStorage.setItem('slide-theme', next);
-      flash(next === 'light' ? '☀ light' : '☾ dark');
-      broadcastTheme(next);
+      toggleTheme();
     }
     if (e.key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       var sw = document.getElementById('stopwatch');

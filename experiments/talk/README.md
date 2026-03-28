@@ -60,6 +60,7 @@ Slides support inline (`$...$`) and display (`$$...$$`) math via KaTeX, rendered
 | Page | Description |
 |------|-------------|
 | `slides.html` | Remark-based slide deck (entry point) |
+| `longertalk.html` | Extended version of the slides (full-length backup) |
 | `interact.html` | Audience poll page (mobile-friendly) |
 | `live.html` | Real-time bar charts of poll responses |
 

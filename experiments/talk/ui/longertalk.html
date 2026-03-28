@@ -420,8 +420,6 @@ class: title-slide, middle
 
 ## Quick Show of Hands
 
-<div style="float:right;text-align:center;margin-left:1rem;"><div id="qr-slides" style="background:#fff;padding:4px;border-radius:6px;display:inline-block;width:130px;"></div><div style="font-family:var(--mono);font-size:0.55rem;color:#60a5fa;margin-top:2px;">Scan to follow along</div></div>
-
 - Use **in-lecture demos** in your CS teaching?
 
 --
@@ -434,16 +432,39 @@ class: title-slide, middle
 
 --
 
-- Students **afraid to make mistakes** when they're one of the few put on the spot?
-
---
-
 - <a href="http://nifty.stanford.edu/" style="text-decoration:underline;">**Nifty demos**</a> hard to adapt without a common framework?
 
 --
 
 .box.amber[
-What if demos were **shareable, reproducible, and collaborative** — where everyone participates in parallel and mistakes become **visible learning moments**?
+What if demos were **shareable, reproducible, and collaborative** — and you could see every student's work live?
+]
+
+---
+
+## The Problem
+
+.cols[
+.col[
+### Today
+
+- Demos are **one-way** — instructor drives, students watch
+- "Collaborative" means **one student at a time** — slow, most watch
+- Students **stay silent** — afraid of mistakes in public
+- Labs are **locked to one classroom** — not shareable
+]
+.col[
+### What we want
+
+- Demos are **two-way** — students drive their own exploration
+- **Everyone participates in parallel** — no waiting on one student
+- Mistakes become **visible learning moments** — not embarrassments
+- Labs are **shareable and reproducible** across universities
+]
+]
+
+.box.amber[
+How do we get there?
 ]
 
 ---
@@ -492,7 +513,7 @@ Every lab gets this for free — **parallel exploration**, **live feedback**, **
 
 ---
 
-## LEAP in Practice: Monte Carlo Method
+## LEAP in Practice: Monte Carlo Pi
 
 .cols[
 .col[
@@ -508,27 +529,6 @@ Students see their estimate converge in real time — intuitive introduction to 
 ]
 .col[
 <img class="themed-img" data-dark="assets/mcs-dark.webp" data-light="assets/mcs-light.webp" src="assets/mcs-dark.webp" style="width:100%;border-radius:8px;">
-]
-]
-
----
-
-## LEAP in Practice: Graph Search
-
-.cols[
-.col[
-Students explore graphs by discovering neighbors one node at a time — then implement BFS or DFS in Python.
-
-- Call `start()` to get the root node
-- Call `neighbor(node)` to reveal adjacent nodes
-- Click nodes to traverse — build the algorithm by hand first
-
-.box.green[
-Multiple graph types — binary trees, grids, Petersen graph, cycles — and instructors can add custom graphs via YAML.
-]
-]
-.col[
-<img class="themed-img" data-dark="assets/gs-dark.webp" data-light="assets/gs-light.webp" src="assets/gs-dark.webp" style="width:100%;border-radius:8px;">
 ]
 ]
 
@@ -634,7 +634,7 @@ class: fill-slide, middle
 ## Get Started
 
 ```bash
-pip install git+https://github.com/leaplive/LEAP2.git
+pip install leaplive
 leap init                # set up project + admin password
 leap run                 # → http://your-ip:9000
 ```
@@ -891,12 +891,10 @@ try {
   var qr2 = qrcode(0, 'M');
   qr2.addData(SLIDES_URL);
   qr2.make();
-  var qrSvg = colorQR(qr2.createSvgTag(6, 0), '#60a5fa');
-  document.querySelectorAll('[id="qr-slides"]').forEach(function(el) {
-    el.innerHTML = qrSvg;
-    var svg = el.querySelector('svg');
-    if (svg) { svg.style.width = '100%'; svg.style.height = 'auto'; }
-  });
+  var qrSlides = document.getElementById('qr-slides');
+  if (qrSlides) {
+    qrSlides.innerHTML = colorQR(qr2.createSvgTag(6, 0), '#60a5fa');
+  }
 } catch (e) {
   console.warn('Slides QR generation failed:', e);
 }

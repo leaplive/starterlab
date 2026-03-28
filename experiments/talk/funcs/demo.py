@@ -3,7 +3,7 @@
 import time
 from leap import adminonly, ctx, nolog, noregcheck, ratelimit, withctx
 
-_current_slide = 1
+_current_slide = 0
 _reactions: list[dict] = []
 
 QUESTIONS = [

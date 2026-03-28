@@ -168,6 +168,7 @@ pre code {
 
 .cols   { display: flex; gap: 2rem; align-items: flex-start; position: relative; z-index: 1; }
 .col    { flex: 1; }
+.col-30 { flex: 0 0 30%; }
 .col-40 { flex: 0 0 40%; }
 
 .compact-code .cols { gap: 0.8rem; }
@@ -405,7 +406,7 @@ class: title-slide, middle
 </tr></table>
 
 <div style="display:flex;justify-content:center;align-items:center;gap:2rem;margin-top:0.8rem;">
-<div style="text-align:center;"><div id="qr-slides" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div><div style="font-family:var(--mono);font-size:0.7rem;color:#60a5fa;margin-top:4px;">Follow along</div></div>
+<div style="text-align:center;"><div id="qr-slides" style="background:#fff;padding:8px;border-radius:8px;display:inline-block;"></div><div style="font-family:var(--mono);font-size:0.7rem;color:#60a5fa;margin-top:4px;">Follow along</div><div style="font-family:var(--mono);font-size:0.6rem;color:#60a5fa;margin-top:2px;opacity:0.7;">https://tinyurl.com/leaplive2</div></div>
 <div style="width:1px;height:60px;background:var(--border);"></div>
 <div style="display:flex;align-items:center;gap:1.2rem;">
 <img src="assets/viterbi-logo.png" alt="USC Viterbi" style="height:35px;">
@@ -536,89 +537,42 @@ Multiple graph types — binary trees, grids, Petersen graph, cycles — and ins
 
 ## More Labs Built with LEAP
 
-.cols[
-.col[
-<span class="dot green"></span> **Graph Search** — BFS/DFS on grids, trees, custom graphs — students discover neighbors one call at a time
-
-<span class="dot purple"></span> **Quiz Lab** — author quizzes in markdown with LaTeX and code blocks — server-side grading keeps answers secure
-
-<span class="dot"></span> **Starter Lab** — RPC, logging, decorators, rate limiting — template for building new experiments
-
-.muted[+ Euler method, root finding, power method, and more]
-]
-]
-
 .box.amber[
 **This slide deck is itself a LEAP experiment** — with <u>live slide sync</u> and <u>audience interaction</u>.
 ]
 
 ---
 
-## Instructor Side — Just a Function
+## How It Works
 
-```python
-# experiments/my-lab/funcs/functions.py
-
-def neighbors(node: str) -> list[str]:
-    """Return adjacent nodes in the graph."""
+<div class="cols"><div class="col-40">
+<strong>Instructor</strong>
+<pre><code class="python">def neighbors(node):
     return graph[node]
+</code></pre>
+</div><div class="col">
+<strong>Student</strong>
+<pre><code class="python">from leap.client import Client
+c = Client(URL, "s042", experiment="my-lab")
+c.neighbors("A")  # ["B","C","D"]
+</code></pre>
+</div></div>
 
-def cost(a: str, b: str) -> float:
-    """Return the edge weight between two nodes."""
-    return weights[(a, b)]
-```
-
-- Drop a function in the experiment folder — LEAP does the rest
-- Automatic **rate limiting**, **logging**, **registration checks** via decorators
-- No server code, no API boilerplate
-
-.muted[→ Instantly live at `POST /exp/my-lab/call`]
-
----
-
-## Student Side — Python, JS, or Julia
-
-```python
-from leap.client import Client
-c = Client("http://leap.university.edu", student_id="s042", experiment="my-lab")
-
-c.help()
-#  neighbors(node: str) -> list[str]
-#      Return adjacent nodes in the graph.
-#  cost(a: str, b: str) -> float
-#      Return the edge weight between two nodes.
-
-c.neighbors("A")       # → ["B", "C", "D"]
-c.cost("A", "B")       # → 4.0
-```
-
-.muted[Same API available in **JavaScript** and **Julia** — or any language with an HTTP client.]
-
----
-
-## Remote Call Logs
-
-Every call → `student_id` + `args` + `result` + `timestamp` → **DuckDB**.
-
-<table class="log-table">
+**Logs** — every call recorded automatically
+<table class="log-table" style="font-size:0.6rem;">
 <tr><th>student</th><th>function</th><th>args</th><th>result</th><th>time</th></tr>
 <tr><td>s042</td><td>neighbors</td><td>("A",)</td><td>["B","C","D"]</td><td>14:01:03</td></tr>
 <tr><td>s017</td><td>cost</td><td>("A","B")</td><td>4.0</td><td>14:01:04</td></tr>
 <tr><td>s042</td><td>neighbors</td><td>("B",)</td><td>["A","D","E"]</td><td>14:01:05</td></tr>
 <tr><td>s023</td><td>neighbors</td><td>("A",)</td><td>["B","C","D"]</td><td>14:01:05</td></tr>
+<tr><td>s017</td><td>neighbors</td><td>("C",)</td><td>["A","D"]</td><td>14:01:06</td></tr>
 </table>
 
-.muted[The live dashboard sees every student's work as it happens.]
-
 ---
 
-class: divider-slide, middle
+class: fill-slide
 
-# Let's Try It — Right Now
-
----
-
-class: fill-slide, middle
+## Let's Try It! <div style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:1rem;gap:0.5rem;"><span style="font-family:var(--mono);font-size:1rem;color:#f59e0b;font-weight:600;">Scan to participate →</span><div id="qr" style="background:#fff;padding:4px;border-radius:6px;display:inline-block;width:80px;"></div></div>
 
 .cols[
 .col-40[
@@ -679,9 +633,9 @@ class: divider-slide, middle
 
 **LEAP2** — drop a function, get an interactive lab.
 
-<div style="text-align:center;margin:0.8rem 0;"><div id="qr-repo" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 0.5rem;"></div><div id="qr-arxiv" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 0.5rem;"></div></div>
+<div style="text-align:center;margin:0.8rem 0;"><div id="qr-repo" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 2rem;"></div><div id="qr-arxiv" style="background:#fff;padding:10px;border-radius:8px;display:inline-block;margin:0 2rem;"></div></div>
 
-Happy to facilitate and collaborate for field testing / developing labs with LEAP.
+Open to research collaborations — classroom deployments, new labs, or just a conversation.
 
 <a href="https://github.com/leaplive/LEAP2" style="color:#34d399;">github.com/leaplive/LEAP2</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3770761.3777313">DOI: 10.1145/3770761.3777313</a> &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2601.22534" style="color:#7c3aed;">arXiv: 2601.22534</a> &nbsp;·&nbsp; <a href="mailto:sbmohant@usc.edu">sbmohant@usc.edu</a>
 
@@ -879,8 +833,12 @@ try {
   var qr = qrcode(0, 'M');
   qr.addData(INTERACT_URL);
   qr.make();
-  var qrEl = document.getElementById('qr');
-  if (qrEl) qrEl.innerHTML = qr.createSvgTag(5, 0);
+  var qrSvgInteract = colorQR(qr.createSvgTag(5, 0), '#f59e0b');
+  document.querySelectorAll('[id="qr"]').forEach(function(el) {
+    el.innerHTML = qrSvgInteract;
+    var svg = el.querySelector('svg');
+    if (svg) { svg.style.width = '100%'; svg.style.height = 'auto'; }
+  });
 } catch (e) {
   console.warn('QR generation failed:', e);
 }
@@ -908,7 +866,7 @@ try {
   qr3.make();
   var qrRepo = document.getElementById('qr-repo');
   if (qrRepo) {
-    qrRepo.innerHTML = '<div style="font-family:var(--mono);font-size:0.55rem;color:#34d399;margin-bottom:4px;font-weight:500;">GitHub</div>' + colorQR(qr3.createSvgTag(6, 0), '#34d399');
+    qrRepo.innerHTML = '<div style="font-family:var(--mono);font-size:0.8rem;color:#34d399;margin-bottom:4px;font-weight:600;">GitHub</div>' + colorQR(qr3.createSvgTag(6, 0), '#34d399');
   }
 } catch (e) {
   console.warn('Repo QR generation failed:', e);
@@ -921,7 +879,7 @@ try {
   qr4.make();
   var qrArxiv = document.getElementById('qr-arxiv');
   if (qrArxiv) {
-    qrArxiv.innerHTML = '<div style="font-family:var(--mono);font-size:0.55rem;color:#7c3aed;margin-bottom:4px;font-weight:500;">Paper</div>' + colorQR(qr4.createSvgTag(6, 0), '#7c3aed');
+    qrArxiv.innerHTML = '<div style="font-family:var(--mono);font-size:0.8rem;color:#7c3aed;margin-bottom:4px;font-weight:600;">Paper</div>' + colorQR(qr4.createSvgTag(6, 0), '#7c3aed');
   }
 } catch (e) {
   console.warn('arXiv QR generation failed:', e);

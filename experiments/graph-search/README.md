@@ -18,6 +18,16 @@ pages:
 
 Explore graphs by discovering neighbors one node at a time. Implement breadth-first search (BFS) or depth-first search (DFS) using the RPC functions, then visualize your traversal path.
 
+> [!IMPORTANT]
+> **You must set `trial_name` to the graph you want to explore.** The graph name is passed as the trial — functions like `start()` and `neighbor()` use it to know which graph to load. Without it, you'll get an error.
+>
+> ```python
+> c = Client("http://localhost:9000", student_id="s001",
+>            experiment="graph-search", trial_name="binary-tree")  # ← required
+> ```
+>
+> Call `list_graphs()` to see all available graph names.
+
 ## Available Graphs
 
 | Name | Type | Description |

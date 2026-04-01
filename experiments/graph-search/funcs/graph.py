@@ -99,9 +99,25 @@ def list_graphs() -> list:
     return graphs
 
 
+def _require_graph_trial():
+    """Validate that ctx.trial is set to a valid graph name."""
+    if not ctx.trial:
+        available = [f.stem for f in sorted(_graphs_dir().glob("*.yaml"))]
+        raise ValueError(
+            f"trial_name is required and must be a graph name. "
+            f"Available graphs: {', '.join(available)}. "
+            f'Set it when creating your client: Client(..., trial_name="binary-tree")'
+        )
+
+
 @withctx
 def start() -> dict:
-    """Get the start node and graph info. Set your client's trial_name to the graph name."""
+    """Get the start node and graph info.
+
+    Requires trial_name to be set to a graph name (e.g. "binary-tree").
+    Call list_graphs() to see available graphs.
+    """
+    _require_graph_trial()
     graph = _load_graph(ctx.trial)
     info = {
         "start": graph["start"],
@@ -119,7 +135,11 @@ def start() -> dict:
 
 @withctx
 def neighbor(node: str) -> list:
-    """Get the neighbors of a node in the current graph (set by trial name)."""
+    """Get the neighbors of a node in the current graph.
+
+    Requires trial_name to be set to a graph name (e.g. "binary-tree").
+    """
+    _require_graph_trial()
     graph = _load_graph(ctx.trial)
     return _get_neighbors(graph, node)
 
